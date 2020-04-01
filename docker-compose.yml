@@ -4,7 +4,7 @@ services:
   datastore:
     image: postgres:11.4
     volumes:
-      - "./build/datastore:/var/lib/postgresql/data"
+      - "./_build/datastore:/var/lib/postgresql/data"
     environment:
       POSTGRES_USER: datastore
       POSTGRES_PASSWORD: datastore
@@ -13,7 +13,7 @@ services:
     image: redis:alpine
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
-      - ./build/redis-data:/data
+      - ./_build/redis-data:/data
 
   worker:
     build: .
@@ -22,7 +22,9 @@ services:
       - redis
       - datastore
     volumes:
-      - "./build/data:/data"
+      - "./_build/data:/data"
+      - "./src:/crawlers/src"
+      - "./config:/crawlers/config"
     environment:
       MEMORIOUS_BASE_PATH: /data
       MEMORIOUS_CONFIG_PATH: /crawlers/config
@@ -40,7 +42,7 @@ services:
       - redis
       - datastore
     volumes:
-      - "./build/data:/data"
+      - "./_build/data:/data"
     environment:
       MEMORIOUS_CONFIG_PATH: /crawlers/config
       ARCHIVE_PATH: /data/archive
