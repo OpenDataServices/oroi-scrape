@@ -1,0 +1,44 @@
+name: gla_gifts
+description: 'London Assembly'
+
+# schedule: weekly
+pipeline:
+
+  init:
+    method: scrapers.gla:last_page_no
+    params:
+      url: https://www.london.gov.uk/people/all-gifts-hospitality
+    handle:
+      parse: parse
+      pass: pages
+
+  pages:
+    method: sequence
+    params:
+      stop: 1
+      step: -1
+    handle:
+      pass: seed
+
+  seed:
+    method: seed
+    params:
+      urls:
+        - https://www.london.gov.uk/people/all-gifts-hospitality?page=%(number)s
+    handle:
+      pass: fetch
+
+  fetch:
+    method: fetch
+    handle:
+      pass: parse
+
+  parse:
+    method: scrapers.gla:parse_gifts
+    handle:
+      store: store
+  
+  store:
+    method: db
+    params:
+      table: gla_gifts
