@@ -23,11 +23,11 @@ services:
       - datastore
     volumes:
       - "./_build/data:/data"
-      - "./src:/crawlers/src"
-      - "./config:/crawlers/config"
+      - "./oroi-scrape/scrapers:/oroi-scrape/scrapers"
+      - "./oroi-scrape/config:/oroi-scrape/config"
     environment:
       MEMORIOUS_BASE_PATH: /data
-      MEMORIOUS_CONFIG_PATH: /crawlers/config
+      MEMORIOUS_CONFIG_PATH: /oroi-scrape/config
       MEMORIOUS_DEBUG: 'true'
       ARCHIVE_PATH: /data/archive
       REDIS_URL: redis://redis:6379/0
@@ -44,7 +44,7 @@ services:
     volumes:
       - "./_build/data:/data"
     environment:
-      MEMORIOUS_CONFIG_PATH: /crawlers/config
+      MEMORIOUS_CONFIG_PATH: /oroi-scrape/config
       ARCHIVE_PATH: /data/archive
     tmpfs:
       - "/tmp"
