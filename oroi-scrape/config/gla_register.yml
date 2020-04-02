@@ -1,0 +1,27 @@
+name: gla_register
+description: 'London Assembly: Register of interests'
+
+pipeline:
+
+  init:
+    method: scrapers.gla:get_members
+    params:
+      base: https://www.london.gov.uk
+      url: https://www.london.gov.uk/sitemap
+    handle:
+      pass: fetch
+
+  fetch:
+    method: fetch
+    handle:
+      pass: parse
+
+  parse:
+    method: scrapers.gla:parse_declaration
+    handle:
+      store: store
+  
+  store:
+    method: db
+    params:
+      table: gla_register
