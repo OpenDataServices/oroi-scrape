@@ -60,21 +60,21 @@ Parses a declaration of interest
 """
 def parse_declaration(context, data):
     declaration_mapping = {
-        "employment": "1.",
-        "payment_for_duties": "2.",
-        "contract": "3(a).",
-        "contract_with_firm": "3(b).",
-        "contract_with_corporate": "3(c).",
-        "contract_beneficial": "3(d).",
-        "contract_employee": "3(e).",
-        "land": "4.",
-        "land_occupancy_licence": "5.",
-        "tenancy": "6.",
-        "beneficial_interests_body": "7.",
-        "nonprofit_positions": "8.",
-        "other_positions": "9.",
-        "other_directorships": "10.",
-        "other_interest": "11."
+        "employment_description": "1.",
+        "payment_description": "2.",
+        "contract_description": "3(a).",
+        "contract_partner_description": "3(b).",
+        "contract_director_description": "3(c).",
+        "contract_securities_description": "3(d).",
+        "contract_employee_description": "3(e).",
+        "land_description": "4.",
+        "contract_land_licence_description": "5.",
+        "contract_tenancy_description": "6.",
+        "securities_description": "7.",
+        "position_nonprofit_description": "8.",
+        "position_other_description": "9.",
+        "position_directorships_description": "10.",
+        "other_description": "11."
     }
     parsed_row = {}
     with context.http.rehash(data) as result:
@@ -104,9 +104,10 @@ def parse_declaration(context, data):
 
             base_declaration = {
                 "source": result.url,
-                "name": person_name,
-                "url": person_url,
-                "date": date,
+                "member_name": person_name,
+                "member_url": person_url,
+                "body_received_by": "Greater London Authority",
+                "disclosure_date": date,
             }
 
             # Get declaration contents
