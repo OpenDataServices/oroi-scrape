@@ -55,6 +55,41 @@ def get_members(context, data):
         if link.text.strip().lower() == 'register of interests':
             context.emit(data={"url": "{}{}".format(base_url, link.get("href"))})
 
+
+def make_value(field, content_element):
+    additional_content = {
+        "contract_description": "a",
+        "contract_partner_description": "b",
+        "contract_director_description": "c",
+        "contract_securities_description": "d",
+        "contract_employee_description": "e",
+    }
+
+    # declarations are alternating <p> with the question and <ul> with the answer
+    if content_element.tag == "ul":
+        parsed_content = []
+
+        for li in content_element.findall(".//li"):
+            if li is not None and li.text is not None:
+                parsed_content.append(li.text.strip())
+
+        if len(parsed_content):
+            contents = "|".join(response)
+
+    # ..except when it's not, and it's just all <p>s
+    elif next_element.tag == "p":
+        if next_element.text:
+            lis = next_element.text_content().split("\n")
+            lis = [t.strip() for t in lis]
+            if len(lis):
+                contents = "|".join(lis)
+
+    if field in additional_content:
+        return "{} ({})".format(contents, additional_content[field])
+    else:
+        return contents
+
+
 """
 Parses a declaration of interest
 """
@@ -115,32 +150,10 @@ def parse_declaration(context, data):
             content = holder.findall(".//*")
             declaration = copy.deepcopy(base_declaration)
             for element in content:
-                # declarations are alternating <p> with the question and <ul> with the answer
-                # ..except when it's not, and it's just all <p>s
                 for field, number in declaration_mapping.items():
                     if element.tag == "p" and element.text is not None and number in element.text:
                         next_element = element.getnext()
-                        if len(next_element) and next_element.tag == "ul":
-                            
-                            # This should be the answer
-                            # There might be multiple things in the list
-                            response = []
-                            for li in next_element.findall(".//li"):
-                                if li is not None and li.text is not None:
-                                    response.append(li.text.strip())
-
-                            if response:
-                                declaration[field] = "|".join(response)
-
-                        elif len(next_element) and next_element.tag == "p":
-                            # This should be the answer
-                            # multiple declarations are separated by newlines
-                            # ..but sometimes the newlines don't actually denote a new declaration
-                            if next_element.text:
-                                lis = next_element.text_content().split("\n")
-                                lis = [t.strip() for t in lis]
-                                if len(lis):
-                                    declaration[field] = "|".join(lis)
+                        declaration[field] = make_value(field, next_element)
                 
             
             context.emit(rule="store", data=declaration)
