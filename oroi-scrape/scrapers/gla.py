@@ -66,6 +66,7 @@ def parse_declaration(context, data):
         "contract_with_firm": "3(b).",
         "contract_with_corporate": "3(c).",
         "contract_beneficial": "3(d).",
+        "contract_employee": "3(e).",
         "land": "4.",
         "land_occupancy_licence": "5.",
         "tenancy": "6.",
@@ -89,7 +90,7 @@ def parse_declaration(context, data):
 
             # Get date
             # At the bottom of the page, in the final content block
-            last_block = holders[2]
+            last_block = holders[2] ## HERENOW sometimes otu of range .. maybe https://www.london.gov.uk/people/mayoral/munira-mirza-past-staff/register-of-interests
             try:
                 date = last_block.findall(".//p")[-1]
                 if "date:" in date.text.lower():
