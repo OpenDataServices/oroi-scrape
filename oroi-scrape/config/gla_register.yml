@@ -10,11 +10,12 @@ pipeline:
       url: https://www.london.gov.uk/sitemap
     handle:
       pass: fetch
+      debug: debug
 
   # init:
   #   method: seed
   #   params:
-  #     url: https://www.london.gov.uk/people/mayoral/boris-johnson-mp-past-staff/register-of-interests
+  #     url: https://www.london.gov.uk/people/assembly/tony-arbour/more-about/register-of-interests
   #   handle:
   #     pass: fetch
 
@@ -32,3 +33,10 @@ pipeline:
     method: db
     params:
       table: gla_register
+      unique: source
+
+  debug:
+    method: db
+    params:
+      table: gla_debug
+      unique: url

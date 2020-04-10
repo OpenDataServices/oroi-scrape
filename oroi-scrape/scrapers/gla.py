@@ -45,20 +45,6 @@ def parse_gifts(context, data):
 
                 context.emit(rule="store", data=parsed_row)
 
-"""
-gla_register - init
-Parses the sitemap to find all the people
-"""
-def get_members(context, data):
-    base_url = context.get("base")
-    sitemap_url = context.get("url")
-    sitemap = context.http.get(sitemap_url)
-    people = sitemap.html.find(".//div[@id='block-gla-key-person-profile-people-sitemap']")
-    links = people.findall(".//div/ul/li/div/ul/li/a")
-    for link in links:
-        if link.text.strip().lower() == "register of interests":
-            context.emit(data={"url": "{}{}".format(base_url, link.get("href"))})
-
 
 """
 gla_register - helper
@@ -86,23 +72,24 @@ def make_value(field, content_element):
     if content_element.tag == "ul":
 
         for li in content_element.findall(".//li"):
-            if li is not None and li.text is not None:
+
+            if li is not None and li.text_content() is not None:
                 
-                content = li.text.strip()
-                if field in additional_content:
+                content = li.text_content().strip()
+                if content != "None" and content != "N/A" and field in additional_content:
                     content = "{} ({})".format(content, additional_content[field])
                 
                 parsed_content.append(content)
 
     # ..except when it's not, and it's just all <p>s
     elif content_element.tag == "p":
-        if content_element.text:
+        if content_element.text_content():
             lis = content_element.text_content().split("\n")
             
             if len(lis):
                 for li in lis:
                     content = li.strip()
-                    if field in additional_content:
+                    if content != "None" and content != "N/A" and field in additional_content:
                         content = "{} ({})".format(content, additional_content[field])
                     
                     parsed_content.append(content)
@@ -111,6 +98,23 @@ def make_value(field, content_element):
         return "|".join(parsed_content)
     else:
         return None
+
+
+"""
+gla_register - init
+Parses the sitemap to find all the people
+"""
+def get_members(context, data):
+    base_url = context.get("base")
+    sitemap_url = context.get("url")
+    sitemap = context.http.get(sitemap_url)
+    people = sitemap.html.find(".//div[@id='block-gla-key-person-profile-people-sitemap']")
+    links = people.findall(".//div/ul/li/div/ul/li/a")
+    for link in links:
+        if link.text.strip().lower() == "register of interests":
+            url = "{}{}".format(base_url, link.get("href"))
+            context.emit(rule="debug", data={"url": url})
+            context.emit(data={"url": url})
 
 
 """
@@ -162,30 +166,42 @@ def parse_declaration(context, data):
             person_url = profile.get("href")
 
             holders = result.html.findall(".//div[@class='content']")
-            if len(holders) < 3:
-                print('-------------holders----------------------')
-                print(person_url)
-                print('-----------------------------------')
             section_responses = None
             last_block = None
-            for holder in holders:
-                
-                h2 = holder.find(".//h2")
-                if h2 is None:
-                    # Sometimes the declaration section has no subheading
-                    last_block = holder
-                elif "section b" in h2.text.lower():
-                    section_responses = holder
-                elif "declaration" in h2.text.lower():
-                    last_block = holder
-            
-            # Get the date string from the 'declaration' block
-            last_block_contents = last_block.findall(".//*")
-            for ele in last_block_contents:
-                if "date:" in ele.text_content().lower():
-                    date = ele.text_content()
 
-            date = date.replace("Date:", "").replace("Declaration date:", "").replace("Original declaration date:", "").strip()
+            if len(holders) > 1:
+
+                for holder in holders:
+                    
+                    h2 = holder.find(".//h2")
+                    if h2 is None:
+                        # Sometimes the declaration section has no subheading
+                        last_block = holder
+                    elif "section b" in h2.text.lower():
+                        section_responses = holder
+                    elif "declaration" in h2.text.lower():
+                        last_block = holder
+                
+                # Get the date string from the 'declaration' block
+                try:
+                    last_block_contents = last_block.findall(".//*")
+                    for ele in last_block_contents:
+                        if "date:" in ele.text_content().lower():
+                            date = ele.text_content()
+                except Exception as e:
+                    print(result.url)
+                    print(e)
+
+            else:
+                # Special BoJo layout
+                section_responses = holders[0]
+                ps = section_responses.findall(".//p")
+                date = ps[-1].text_content()
+
+            try:
+                date = date.replace("Date:", "").replace("Declaration date:", "").replace("Original declaration date:", "").strip()
+            except Exception as e:
+                date = "not found"
 
             base_declaration = {
                 "source": result.url,
@@ -203,23 +219,27 @@ def parse_declaration(context, data):
                 declaration = copy.deepcopy(base_declaration)
 
                 for element in content:
-                
-                    # This works for pages with some semblence of structure
+
                     for number, field in declaration_mapping.items():
                         
-                        if element.tag == "p" and element.text is not None and number in element.text:
-                            next_element = element.getnext()
+                        # This works for pages with some semblence of structure
+                        if element.tag == "p" and element.text_content() is not None:
+                            
+                            if number in element.text_content():
+                                
+                                next_element = element.getnext()
+                                if next_element is not None:
+                                    value = make_value(field, next_element)
+                                    if declaration.get(field):
+                                        declaration[field] = "{}|{}".format(declaration[field], value)
+                                    else:
+                                        declaration[field] = value
 
-                            value = make_value(field, next_element)
-                            if declaration.get(field):
-                                declaration[field] = "{}|{}".format(declaration[field], value)
-                            else:
-                                declaration[field] = value
-
-                    # This catches pages where everything is just <p>s
+                        # This catches pages where everything is just <p>s
+                        # for number, field in alt_declaration_mapping.items():
                     for number, field in alt_declaration_mapping.items():
-                        
                         if element.text is not None and number in element.text:
+                            
                             ps = []
                             p = element.getnext()
 
@@ -236,10 +256,10 @@ def parse_declaration(context, data):
                                 declaration[field] = "{}|{}".format(declaration[field], value)
                             else:
                                 declaration[field] = value
-
+                
                 context.emit(rule="store", data=declaration)
             except Exception as e:
-                print('------------no content-----------------------')
+                print('-----------------------------------')
                 print(person_url)
                 print('e {}'.format(e))
                 print('-----------------------------------')
