@@ -113,7 +113,7 @@ def get_members(context, data):
     for link in links:
         if link.text.strip().lower() == "register of interests":
             url = "{}{}".format(base_url, link.get("href"))
-            context.emit(rule="debug", data={"url": url})
+            # context.emit(rule="debug", data={"url": url})
             context.emit(data={"url": url})
 
 
@@ -177,7 +177,7 @@ def parse_declaration(context, data):
             holders = result.html.findall(".//div[@class='content']")
             section_responses = None
             last_block = None
-
+            retry_date = False
             if len(holders) > 1:
 
                 for holder in holders:
@@ -192,18 +192,21 @@ def parse_declaration(context, data):
                         last_block = holder
                 
                 # Get the date string from the 'declaration' block
-                try:
+                if last_block is not None:
                     last_block_contents = last_block.findall(".//*")
                     for ele in last_block_contents:
                         if "date:" in ele.text_content().lower():
                             date = ele.text_content()
-                except Exception as e:
-                    print(result.url)
-                    print(e)
+                        else:
+                            retry_date = True
+                else:
+                    retry_date = True
 
             else:
-                # Special BoJo layout
                 section_responses = holders[0]
+                retry_date = True
+
+            if retry_date:
                 ps = section_responses.findall(".//p")
                 date = ps[-1].text_content()
 
@@ -211,7 +214,7 @@ def parse_declaration(context, data):
                 date = date.replace("Date:", "").replace("Declaration date:", "").replace("Original declaration date:", "").strip()
             except Exception as e:
                 date = "not found"
-
+            
             base_declaration = {
                 "source": result.url,
                 "member_name": person_name,

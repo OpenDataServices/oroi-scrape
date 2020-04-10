@@ -15,7 +15,7 @@ pipeline:
   # init:
   #   method: seed
   #   params:
-  #     url: https://www.london.gov.uk/people/assembly/tony-arbour/more-about/register-of-interests
+  #     url: https://www.london.gov.uk/people/mayoral/amy-lame/register-of-interests
   #   handle:
   #     pass: fetch
 
