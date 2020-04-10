@@ -11,6 +11,13 @@ pipeline:
     handle:
       pass: fetch
 
+  # init:
+  #   method: seed
+  #   params:
+  #     url: https://www.london.gov.uk/people/mayoral/boris-johnson-mp-past-staff/register-of-interests
+  #   handle:
+  #     pass: fetch
+
   fetch:
     method: fetch
     handle:

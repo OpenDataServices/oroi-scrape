@@ -3,6 +3,7 @@ import lxml
 from memorious.helpers import search_results_last_url
 
 """
+gla_gifts
 Gets the page no. of the last page so all pages
 can be generated in sequence.
 """
@@ -19,7 +20,9 @@ def last_page_no(context, data):
     page_no = last_url.split("?page=")[-1]
     context.emit(data={"number": int(page_no)})
 
+
 """
+gla_gifts
 Parses the table of gifts declarations on one page
 """
 def parse_gifts(context, data):
@@ -43,6 +46,7 @@ def parse_gifts(context, data):
                 context.emit(rule="store", data=parsed_row)
 
 """
+gla_register - init
 Parses the sitemap to find all the people
 """
 def get_members(context, data):
@@ -52,65 +56,101 @@ def get_members(context, data):
     people = sitemap.html.find(".//div[@id='block-gla-key-person-profile-people-sitemap']")
     links = people.findall(".//div/ul/li/div/ul/li/a")
     for link in links:
-        if link.text.strip().lower() == 'register of interests':
+        if link.text.strip().lower() == "register of interests":
             context.emit(data={"url": "{}{}".format(base_url, link.get("href"))})
 
 
-def make_value(field, content_element):
-    additional_content = {
-        "contract_description": "a",
-        "contract_partner_description": "b",
-        "contract_director_description": "c",
-        "contract_securities_description": "d",
-        "contract_employee_description": "e",
+"""
+gla_register - helper
+Some fields need a string appended to them to keep context after it's parsed.
+"""
+def get_extra_data():
+    return {
+        "contract_description": "Contract is with member/partner/family",
+        "contract_partner_description": "Contract is with a firm of which member/partner/family is a partner",
+        "contract_director_description": "Contract is with a corporate body of which member/partner/family is a director",
+        "contract_securities_description": "Contract is with a firm or corporate body in which member/partner/family has a beneficial interest in securities thereof",
+        "contract_employee_description": "Contract is with a firm in which member/partner/family is an employee",
     }
-
-    # declarations are alternating <p> with the question and <ul> with the answer
-    if content_element.tag == "ul":
-        parsed_content = []
-
-        for li in content_element.findall(".//li"):
-            if li is not None and li.text is not None:
-                parsed_content.append(li.text.strip())
-
-        if len(parsed_content):
-            contents = "|".join(response)
-
-    # ..except when it's not, and it's just all <p>s
-    elif next_element.tag == "p":
-        if next_element.text:
-            lis = next_element.text_content().split("\n")
-            lis = [t.strip() for t in lis]
-            if len(lis):
-                contents = "|".join(lis)
-
-    if field in additional_content:
-        return "{} ({})".format(contents, additional_content[field])
-    else:
-        return contents
 
 
 """
+gla_register - helper
+Assembles the actual value of a field depending on the surrounding html structure.
+"""
+def make_value(field, content_element):
+    additional_content = get_extra_data()
+
+    # declarations are alternating <p> with the question and <ul> with the answer
+    parsed_content = []
+    if content_element.tag == "ul":
+
+        for li in content_element.findall(".//li"):
+            if li is not None and li.text is not None:
+                
+                content = li.text.strip()
+                if field in additional_content:
+                    content = "{} ({})".format(content, additional_content[field])
+                
+                parsed_content.append(content)
+
+    # ..except when it's not, and it's just all <p>s
+    elif content_element.tag == "p":
+        if content_element.text:
+            lis = content_element.text_content().split("\n")
+            
+            if len(lis):
+                for li in lis:
+                    content = li.strip()
+                    if field in additional_content:
+                        content = "{} ({})".format(content, additional_content[field])
+                    
+                    parsed_content.append(content)
+
+    if len(parsed_content):
+        return "|".join(parsed_content)
+    else:
+        return None
+
+
+"""
+gla_register - parse
 Parses a declaration of interest
 """
 def parse_declaration(context, data):
     declaration_mapping = {
-        "employment_description": "1.",
-        "payment_description": "2.",
-        "contract_description": "3(a).",
-        "contract_partner_description": "3(b).",
-        "contract_director_description": "3(c).",
-        "contract_securities_description": "3(d).",
-        "contract_employee_description": "3(e).",
-        "land_description": "4.",
-        "contract_land_licence_description": "5.",
-        "contract_tenancy_description": "6.",
-        "securities_description": "7.",
-        "position_nonprofit_description": "8.",
-        "position_other_description": "9.",
-        "position_directorships_description": "10.",
-        "other_description": "11."
+        "1.": "employment_description",
+        "2.": "payment_description",
+        "3(a).": "contract_description",
+        "3(b).": "contract_partner_description",
+        "3(c).": "contract_director_description",
+        "3(d).": "contract_securities_description",
+        "3(e).": "contract_employee_description",
+        "4.": "land_description",
+        "5.": "contract_land_licence_description",
+        "6.": "contract_tenancy_description",
+        "7.": "securities_description",
+        "8.": "position_nonprofit_description",
+        "9.": "position_other_description",
+        "10.": "position_directorships_description",
+        "11.": "other_description"
     }
+
+    # Some data has evidently come from an entirely different form, with slightly different
+    # questions and numbers.
+    alt_declaration_mapping = {
+        "1(a)(ii)(aa) – ": "position_other_description",
+        "1(a)(i) – ": "position_other_description",
+        "1(a)(ii)(bb) – ": "position_nonprofit_description",
+        "1(a)(ii)(cc) – ": "position_other_description",
+        "1(a)(vi) – ": "land_description",
+        "1(a)(vii) – ": "contract_description",
+        "1(a)(viii) – ": "gifts",
+        "1(a)(ix) – ": "land_description",
+        "1(a)(x) – ": "contract_tenancy_description",
+        "1(a)(xi) – ": "contract_land_licence_description"
+    }
+
     parsed_row = {}
     with context.http.rehash(data) as result:
         if result.html is not None:
@@ -118,24 +158,34 @@ def parse_declaration(context, data):
             # Get name
             nav = result.html.findall(".//nav[@class='breadcrumb']//a")
             profile = nav[-1]
-            person_name = profile.text.strip().strip("More about ")
+            person_name = profile.text.replace("More about", "").strip()
             person_url = profile.get("href")
 
-            holders = result.html.findall(".//div[@class='content']/div/div[@class='field__items']/div")
+            holders = result.html.findall(".//div[@class='content']")
+            if len(holders) < 3:
+                print('-------------holders----------------------')
+                print(person_url)
+                print('-----------------------------------')
+            section_responses = None
+            last_block = None
+            for holder in holders:
+                
+                h2 = holder.find(".//h2")
+                if h2 is None:
+                    # Sometimes the declaration section has no subheading
+                    last_block = holder
+                elif "section b" in h2.text.lower():
+                    section_responses = holder
+                elif "declaration" in h2.text.lower():
+                    last_block = holder
+            
+            # Get the date string from the 'declaration' block
+            last_block_contents = last_block.findall(".//*")
+            for ele in last_block_contents:
+                if "date:" in ele.text_content().lower():
+                    date = ele.text_content()
 
-            # Get date
-            # At the bottom of the page, in the final content block
-            last_block = holders[2] ## HERENOW sometimes otu of range .. maybe https://www.london.gov.uk/people/mayoral/munira-mirza-past-staff/register-of-interests
-            try:
-                date = last_block.findall(".//p")[-1]
-                if "date:" in date.text.lower():
-                    date = date.text.strip('Date:').strip()
-                else:
-                    # different way of presenting date on some types of page
-                    blob = date.text_content().split("\n")
-                    date = blob[-1].strip("Original declaration date:").strip()
-            except:
-                date = "not found"
+            date = date.replace("Date:", "").replace("Declaration date:", "").replace("Original declaration date:", "").strip()
 
             base_declaration = {
                 "source": result.url,
@@ -145,16 +195,59 @@ def parse_declaration(context, data):
                 "disclosure_date": date,
             }
 
-            # Get declaration contents
-            holder = holders[1] # Section B is always the second block of text
-            content = holder.findall(".//*")
-            declaration = copy.deepcopy(base_declaration)
-            for element in content:
-                for field, number in declaration_mapping.items():
-                    if element.tag == "p" and element.text is not None and number in element.text:
-                        next_element = element.getnext()
-                        declaration[field] = make_value(field, next_element)
-                
-            
-            context.emit(rule="store", data=declaration)
+            additional_content = get_extra_data()
 
+            try:
+                # Get declaration contents
+                content = section_responses.findall(".//div[@class='field__items']//*")
+                declaration = copy.deepcopy(base_declaration)
+
+                for element in content:
+                
+                    # This works for pages with some semblence of structure
+                    for number, field in declaration_mapping.items():
+                        
+                        if element.tag == "p" and element.text is not None and number in element.text:
+                            next_element = element.getnext()
+
+                            value = make_value(field, next_element)
+                            if declaration.get(field):
+                                declaration[field] = "{}|{}".format(declaration[field], value)
+                            else:
+                                declaration[field] = value
+
+                    # This catches pages where everything is just <p>s
+                    for number, field in alt_declaration_mapping.items():
+                        
+                        if element.text is not None and number in element.text:
+                            ps = []
+                            p = element.getnext()
+
+                            while part_of_answer(alt_declaration_mapping, p):
+                                if field in additional_content:
+                                    answer = "{} ({})".format(p.text_content().strip(), additional_content[field])
+                                else:
+                                    answer = p.text_content().strip()
+                                ps.append(answer)
+                                p = p.getnext()
+                            
+                            value = "|".join(ps)
+                            if declaration.get(field):
+                                declaration[field] = "{}|{}".format(declaration[field], value)
+                            else:
+                                declaration[field] = value
+
+                context.emit(rule="store", data=declaration)
+            except Exception as e:
+                print('------------no content-----------------------')
+                print(person_url)
+                print('e {}'.format(e))
+                print('-----------------------------------')
+
+
+def part_of_answer(mapping, element):
+    for number, field in mapping.items():
+        if element is None or (element.tag == "p" and number in element.text):
+            return False
+        
+    return True
