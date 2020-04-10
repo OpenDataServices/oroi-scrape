@@ -155,6 +155,15 @@ def parse_declaration(context, data):
         "1(a)(xi) – ": "contract_land_licence_description"
     }
 
+    # These all get merged into one field after they've been parsed
+    contract_fields = [
+        "contract_description",
+        "contract_partner_description",
+        "contract_director_description",
+        "contract_securities_description",
+        "contract_employee_description"
+    ]
+
     parsed_row = {}
     with context.http.rehash(data) as result:
         if result.html is not None:
@@ -257,11 +266,21 @@ def parse_declaration(context, data):
                             else:
                                 declaration[field] = value
                 
+                # Merge the contract fields together now they've had context strings attached
+                contracts = [declaration.get(contract_field) for contract_field in contract_fields if declaration.get(contract_field) is not None]
+                for contract_field in contract_fields:
+                    if declaration.get(contract_field):
+                        declaration.pop(contract_field)
+
+                declaration["contract_description"] = "|".join(contracts)
+
                 context.emit(rule="store", data=declaration)
+            
             except Exception as e:
                 print('-----------------------------------')
                 print(person_url)
                 print('e {}'.format(e))
+                print(contracts)
                 print('-----------------------------------')
 
 
