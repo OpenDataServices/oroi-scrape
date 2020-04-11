@@ -35,13 +35,14 @@ def parse_gifts(context, data):
                 cells = row.findall(".//td")
 
                 recipient = cells[0].find(".//a")
-                parsed_row["recipient"] = recipient.text.strip()
-                parsed_row["recipient_url"] = recipient.get("href")
+                parsed_row["member_name"] = recipient.text.strip()
+                parsed_row["interest_recipient"] = recipient.text.strip()
+                parsed_row["member_url"] = recipient.get("href")
 
-                parsed_row["recipient_role"] = cells[1].text.strip()
-                parsed_row["date_gifted"] = cells[2].find(".//span").get("content")
-                parsed_row["details"] = cells[3].text.strip()
-                parsed_row["donor"] = cells[4].text.strip()
+                parsed_row["member_role"] = cells[1].text.strip()
+                parsed_row["gift_date"] = cells[2].find(".//span").get("content")
+                parsed_row["gift_reason"] = cells[3].text.strip()
+                parsed_row["gift_donor"] = cells[4].text.strip()
 
                 context.emit(rule="store", data=parsed_row)
 
