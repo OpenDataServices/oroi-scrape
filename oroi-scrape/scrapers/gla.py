@@ -125,7 +125,7 @@ Parses a declaration of interest
 def parse_declaration(context, data):
     declaration_mapping = {
         "1.": "employment_description",
-        "2.": "payment_description",
+        "2.": "sponsorship_description",
         "3(a).": "contract_description",
         "3(b).": "contract_partner_description",
         "3(c).": "contract_director_description",
