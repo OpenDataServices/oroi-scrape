@@ -1,0 +1,57 @@
+name: bristol_register
+description: 'Bristol Councillors: Register of interests'
+
+pipeline:
+
+  init:
+    method: seed
+    params:
+      url: https://democracy.bristol.gov.uk/mgMemberIndex.aspx
+    handle:
+      pass: index
+
+  index:
+    method: fetch
+    handle:
+      pass: list
+
+  list:
+    method: parse
+    params:
+      include_paths: 
+       - './/div[@id="modgov"]//ul'
+    handle:
+      fetch: profile
+
+  profile:
+    method: fetch
+    params:
+      rules:
+        and:
+          - mime_group: web
+          - pattern: '.*/mgUserInfo.*'
+    handle:
+      pass: register
+
+  register:
+    method: scrapers.bristol:get_register
+    params:
+      base: 'https://democracy.bristol.gov.uk/'
+    handle:
+      pass: fetch
+
+  fetch:
+    method: fetch
+    handle:
+      pass: parse
+
+  parse:
+    method: scrapers.bristol:parse_register
+    handle:
+      store: store
+  
+  store:
+    method: db
+    params:
+      table: bristol_register
+      unique: source
