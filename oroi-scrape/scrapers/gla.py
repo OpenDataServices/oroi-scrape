@@ -44,6 +44,8 @@ def parse_gifts(context, data):
                 parsed_row["gift_reason"] = cells[3].text.strip()
                 parsed_row["gift_donor"] = cells[4].text.strip()
 
+                parsed_row["body_received_by"] = "Greater London Authority"
+
                 context.emit(rule="store", data=parsed_row)
 
 
