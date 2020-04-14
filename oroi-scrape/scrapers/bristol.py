@@ -48,6 +48,7 @@ def parse_register(context, data):
             "source": result.url,
             "member_name": data.get("member_name"),
             "member_url": data.get("member_url"),
+            "body_received_by": "Bristol City Council",
         }
         if result.html is not None:
             holder = result.html.find(".//div[@id='modgov']")
