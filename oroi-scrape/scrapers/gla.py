@@ -178,6 +178,7 @@ def parse_declaration(context, data):
             holders = result.html.findall(".//div[@class='content']")
             section_responses = None
             last_block = None
+            date = None
             retry_date = False
             if len(holders) > 1:
 
@@ -196,11 +197,18 @@ def parse_declaration(context, data):
                 if last_block is not None:
                     last_block_contents = last_block.findall(".//*")
                     for ele in last_block_contents:
-                        if "date:" in ele.text_content().lower():
-                            date = ele.text_content()
-                        else:
-                            retry_date = True
-                else:
+
+                        if ele.text is not None and ("date" in ele.text.lower() or "declaration:" in ele.text.lower()):
+                            date = ele.text
+
+                        if ele.text is None and ("date" in ele.text_content().lower() or "declaration:" in ele.text_content().lower()):
+                            lines = ele.text_content().split("\n")
+                            
+                            for line in lines:
+                                if "date" in line.lower() or "declaration:" in line.lower():
+                                    date = line
+                
+                if date is None:
                     retry_date = True
 
             else:

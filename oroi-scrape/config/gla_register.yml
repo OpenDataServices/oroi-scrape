@@ -10,14 +10,6 @@ pipeline:
       url: https://www.london.gov.uk/sitemap
     handle:
       pass: fetch
-      debug: debug
-
-  # init:
-  #   method: seed
-  #   params:
-  #     url: https://www.london.gov.uk/people/mayoral/amy-lame/register-of-interests
-  #   handle:
-  #     pass: fetch
 
   fetch:
     method: fetch
@@ -34,9 +26,3 @@ pipeline:
     params:
       table: gla_register
       unique: source
-
-  debug:
-    method: db
-    params:
-      table: gla_debug
-      unique: url
