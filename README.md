@@ -59,7 +59,38 @@ The table schema are set per-scraper (see below), and in addition to the columns
 
 ## Scrapers
 
-### GLA
+### UK Parliament
+
+Takes the XML data already scraped from https://publications.parliament.uk by TheyWorkForYou and parses it into our database.
+
+`ukparl_twfy` table columns:
+
+* `source`: xml file the data came from
+* `member_name`: name of person
+* `member_url`: URI from publicwhip - not their official profile
+* `body_received_by`: "House of Commons"
+* `disclosure_date`: date of the publication of the register, may not be the actual date of disclosure (in which case, it's in the description)
+* `interest_type`: name of the category of interest being declared, as a string. One of:
+  * "Employment and earnings"
+  * "(a) Support linked to an MP but received by a local party organisation or indirectly via a central party organisation"
+  * "(b) Any other support not included in Category 2(a)"
+  * "(i) Shareholdings: over 15% of issued share capital"
+  * "(ii) Other shareholdings, valued at more than £70,000"
+  * "Family members employed and paid from parliamentary expenses"
+  * "Family members engaged in lobbying the public sector on behalf of a third party or client"
+  * "Gifts and benefits from sources outside the UK"
+  * "Gifts, benefits and hospitality from UK sources"
+  * "Land and property portfolio: (i) value over £100,000 and/or (ii) giving rental income of over £10,000 a year"
+  * "Miscellaneous"
+  * "Visits outside the UK"
+* `description`: contents of the interest declaration, aka the interest being declared. Sometimes semi-structured (by a human) and may be parsed further in some cases; sometimes has line spacings.
+
+What this is missing:
+
+* Link back to the actual source on the UK parliament website
+* Member roles
+
+### Greater London Assembly
 
 Two scrapers, one to fetch the gifts/hospitality, and one for the declarations themselves.
 
@@ -118,3 +149,4 @@ The declaration fields as described on the webpage. In the cases where the respo
 * `securities_description`: "Securities"
 * `position_membership_description`: "Membership of organisations"
 * `gift_description` and `gift_date`: From "Gifts and hospitality" under headings "Name of Donor/Nature of gift or hospitality" and "Date of registration" respectively
+
