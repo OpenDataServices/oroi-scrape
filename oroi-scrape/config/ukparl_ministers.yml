@@ -1,0 +1,49 @@
+name: ukparl_ministers
+description: 'UK MPs: list of Ministers Interests'
+
+pipeline:
+
+  init:
+    method: seed
+    params:
+      url: https://www.gov.uk/government/publications/list-of-ministers-interests
+    handle:
+      pass: fetch
+
+  fetch:
+    method: fetch
+    handle:
+      pass: parse
+
+  parse:
+    method: parse
+    params:
+      include_paths: 
+       - './/section[@id="documents"]'
+    handle:
+      fetch: fetch_files
+
+  fetch_files:
+    method: fetch
+    params:
+      rules:
+        and:
+          - mime_type: application/pdf
+    handle:
+      pass: pdf
+
+  pdf:
+    method: directory
+    params:
+      path: scraped_files
+
+  # TODO: parse pdfs here..?
+  # pdf:
+  #   method: scrapers.ukparl:parse_ministers_pdf
+  #   handle:
+  #     pass: store
+
+  # store:
+  #   method: db
+  #   params:
+  #     table: ukparl_ministers
