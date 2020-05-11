@@ -61,7 +61,7 @@ The table schema are set per-scraper (see below), and in addition to the columns
 
 ### UK Parliament
 
-Takes the XML data already scraped from https://publications.parliament.uk by TheyWorkForYou and parses it into our database.
+`ukparl_twfy` takes the XML data already scraped from https://publications.parliament.uk by TheyWorkForYou and parses it into our database.
 
 `ukparl_twfy` table columns:
 
@@ -89,6 +89,8 @@ What this is missing:
 
 * Link back to the actual source on the UK parliament website
 * Member roles
+
+`ukparl_ministers` fetches PDFs from [gov.uk list of ministers interests](https://www.gov.uk/government/publications/list-of-ministers-interests). They are stored in `MEMORIOUS_BASE_PATH/scraped_files/ukparl_ministers`.
 
 ### Greater London Assembly
 
