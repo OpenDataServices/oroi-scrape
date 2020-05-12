@@ -92,6 +92,23 @@ What this is missing:
 
 `ukparl_ministers` fetches PDFs from [gov.uk list of ministers interests](https://www.gov.uk/government/publications/list-of-ministers-interests). They are stored in `MEMORIOUS_BASE_PATH/scraped_files/ukparl_ministers`.
 
+`ukparl_groups` gets the [All-Party Parliamentary Groups](https://publications.parliament.uk/pa/cm/cmallparty/200408/contents.htm) and for each benefit registered for a group, creates a declaration for each member of the group in the 'other' category, with the note "via role as {} in the {} All-Party Parliamentary Group" added to the `description`.
+
+Note: Politician membership of groups that have no benefits declared do not get recorded.
+
+`ukparl_groups` table columns:
+
+* `source`: url of the page the data came from
+* `disclosure_date`: date the benefit was registered
+* `body_received_by`: "UK Parliament"
+* `member_name`: name of the group member
+* `member_party`: political party of the group member
+* `interest_type`: "other"
+* `interest_date`: date the benefit was received
+* `interest_from`: the source of the benefit (which may be a person or organisation)
+* `interest_value`: value of the benefit 
+* `description`: the text content of one interest declared.
+
 ### Greater London Assembly
 
 Two scrapers, one to fetch the gifts/hospitality, and one for the declarations themselves.

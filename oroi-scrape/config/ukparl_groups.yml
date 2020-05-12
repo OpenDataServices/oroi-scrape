@@ -1,0 +1,39 @@
+name: ukparl_groups
+description: 'UK Parliament All-Party Parliamentary Groups interest registers'
+
+pipeline:
+
+  init:
+    method: seed
+    params:
+      url: https://publications.parliament.uk/pa/cm/cmallparty/200408/contents.htm
+    handle:
+      pass: fetch
+
+  fetch:
+    method: fetch
+    handle:
+      pass: list
+
+  list:
+    method: parse
+    params:
+      include_paths: 
+       - './/div[@id="mainTextBlock"]/ul'
+    handle:
+      fetch: group
+
+  group:
+    method: fetch
+    handle:
+      pass: parse
+
+  parse:
+    method: scrapers.ukparl:parse_group
+    handle:
+      pass: store
+
+  store:
+    method: db
+    params:
+      table: ukparl_groups
