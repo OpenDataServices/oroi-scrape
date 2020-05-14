@@ -1,3 +1,5 @@
+import copy
+
 """
 bristol_register
 Get the register of interest and some data from a council member page
@@ -32,51 +34,62 @@ Sections are:
 def parse_register(context, data):
 
     declaration_mapping = {
-        "1.": "employment_description",
-        "2.": "sponsorship_description",
-        "3.": "contract_description",
-        "4.": "land_description",
-        "5.": "contract_land_licence_description",
-        "6.": "contract_tenancy_description",
-        "7.": "securities_description",
-        "8.": "position_membership_description",
+        "1.": "employment_and_earnings",
+        "2.": "donations_sponsorship",
+        "3.": "contracts",
+        "4.": "land_and_property",
+        "5.": "contracts",
+        "6.": "contracts",
+        "7.": "securities_and_shareholdings",
+        "8.": "positions",
         "9.": "gifts",
     }
 
+    notes_mapping = {
+        "5.": "Contract type: licenses to occupy land",
+        "6.": "Contract type: corporate tenancies",
+        "8.": "Position type: membership of organisations"
+    }
+
     with context.http.rehash(data) as result:
-        output = {
+        output_base = {
             "source": result.url,
             "member_name": data.get("member_name"),
             "member_url": data.get("member_url"),
-            "body_received_by": "Bristol City Council",
+            "declared_to": "Bristol City Council",
         }
         if result.html is not None:
             holder = result.html.find(".//div[@id='modgov']")
-            
+
             bullets = holder.findall(".//div[@class='mgLinks']//li")
-            output["disclosure_date"] = bullets[0].text
-            
+            output_base["declared_date"] = bullets[0].text
+
             content = holder.find(".//div[@class='mgDeclarations']")
             declarations = content.findall(".//table")
             for declaration in declarations:
+                question = declaration.find(".//caption").text
                 for number, field in declaration_mapping.items():
-                    question = declaration.find(".//caption").text
                     if number in question:
-                        parsed = []
+                        output = copy.deepcopy(output_base)
+
+                        output["interest_type"] = declaration_mapping.get(number)
+                        if notes_mapping.get(number) is not None:
+                            output["notes"] = notes_mapping.get(number)
+
                         if field == "gifts":
                             # Gifts are in a two-column table with "donor/description" and "date"
                             rows = declaration.findall(".//tr")
                             for row in rows:
                                 cells = row.findall(".//td")
                                 if len(cells):
-                                    output["gift_reason"] = cells[0].text_content()
-                                    output["gift_date"] = cells[1].text_content()
+                                    output["description"] = cells[0].text_content()
+                                    output["interest_date"] = cells[1].text_content()
+
+                                    context.emit(rule="store", data=output)
                         else:
                             # All other tables are just rows with a single cell
                             answers = declaration.findall(".//td")
                             for answer in answers:
-                                parsed.append(answer.text_content())
+                                output["description"] = answer.text_content().replace("\r","").replace("\n","").strip()
+                                context.emit(rule="store", data=output)
 
-                            output[field] = "|".join([ans.replace("\r","").replace("\n","").strip() for ans in parsed])
-
-            context.emit(rule="store", data=output)
