@@ -18,7 +18,7 @@ pipeline:
   list:
     method: parse
     params:
-      include_paths: 
+      include_paths:
        - './/div[@id="modgov"]//ul'
     handle:
       fetch: profile
@@ -49,9 +49,8 @@ pipeline:
     method: scrapers.bristol:parse_register
     handle:
       store: store
-  
+
   store:
     method: db
     params:
       table: bristol_register
-      unique: source
