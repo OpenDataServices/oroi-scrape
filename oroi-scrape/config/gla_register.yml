@@ -20,9 +20,9 @@ pipeline:
     method: scrapers.gla:parse_declaration
     handle:
       store: store
-  
+
   store:
+    delay: 1
     method: db
     params:
       table: gla_register
-      unique: source
