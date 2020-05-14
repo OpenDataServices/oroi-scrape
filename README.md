@@ -83,7 +83,7 @@ The following table summarises which scrapers populate which columns. See notes 
 | ------- | ------ | ---------------- | --------------- | ----------- | ---------- | ----------- | ------------ | ------------- | ----------- | ------------- | ------------- | -------------- |
 | `ukparl_twfy` | X | X | X | X | X | | | X | X | | | |
 | `ukparl_ministers` | n/a (downloads PDFs) |
-| `ukparl_groups` | X | X | X | X | X | | X | X | X | X | X | X |
+| `ukparl_groups` | X | X | X | X | X | X | X | X | X | X | X | X |
 | `gla_gifts` | X | X | | X | X | X | | X | X | X | X | |
 | `gla_register` | X | X | X | X | X | | | X | X | | | |
 | `bristol_register` | X | X | X | X | X | | | X | X | | (X) | |
@@ -137,6 +137,7 @@ Note: Politician membership of groups that have no benefits declared do not get 
 
 * `declared_to`: "UK Parliament"
 * `member_name`: name of the group member
+* `member_role`: role in group and name of group, eg. "Treasurer of Blockchain All Party Parliamentary Group"
 * `interest_type`: "other"
 
 **Interest types**
