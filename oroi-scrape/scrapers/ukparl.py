@@ -112,6 +112,7 @@ def parse_group(context, data):
                         declaration = copy.deepcopy(declaration_benefit)
                         declaration["member_name"] = officer["name"]
                         declaration["member_party"] = officer["party"]
+                        declaration["member_role"] = "{} of {} All-Party Parliamentary Group".format(officer["role"], group_name)
 
                         membership_string = "via role as {} in the {} All-Party Parliamentary Group".format(officer["role"], group_name)
 
