@@ -15,6 +15,6 @@ setup(
     package_data={"": ["oroi-scrape/config/*"]},
     include_package_data=True,
     zip_safe=False,
-    install_requires=["memorious >= 1.5.4", "datafreeze"],
+    install_requires=["memorious >= 1.6.0", "datafreeze"],
     entry_points={},
 )
