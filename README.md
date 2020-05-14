@@ -75,6 +75,7 @@ The scrapers mostly parse their sources into a common set of table columns, but 
 | interest_from | provider of the benefit, eg. donor of a gift, or company as employer |
 | interest_date | date the benefit was received or took place, eg. date of donation (not date of declaration of interest) |
 | interest_value | value of the benefit |
+| notes | notes about the interest_type, eg. if the source was more specific than the value of interest_type captures
 
 The following table summarises which scrapers populate which columns. See notes on individual scrapers below for more information about the actual values.
 
@@ -87,7 +88,7 @@ The following table summarises which scrapers populate which columns. See notes 
 | `gla_register` | X | X | X | X | X | | | X | X | | | |
 | `bristol_register` | X | X | X | X | X | | | X | X | | (X) | |
 
-The value of `interest_type` is one of a set of slugs derived from various source data. The sources vary slightly in how they describe different types of interest, so the mapping of each category slug to text at the source is listed per-scraper below.
+The value of `interest_type` is one of a set of slugs derived from various source data. The sources vary slightly in how they describe different types of interest, so the mapping of each interest_type to text at the source is listed per-scraper below.
 
 ### UK Parliament TWFY
 
@@ -110,7 +111,7 @@ What this is missing:
 
 **Interest types**
 
-| Category slug | Source mappings |
+| interest_type | Source mappings |
 | ------------- | --------------- |
 | employment_and_earnings | "1. Employment and earnings" |
 | employed_family | "9. Family members employed and paid from parliamentary expenses" |
@@ -170,7 +171,7 @@ Each person's declaration contains a response to one of a set of questions. Mult
 
 **Interest types**
 
-| Category slug | Source mappings |
+| interest_type | Source mappings |
 | ------------- | --------------- |
 | employment_and_earnings | "1. Details of any employment, office, trade, profession or vocation carried on for profit or gain by me or my partner. [Partner means spouse, civil partner, a person with whom you live as husband or wife, or a person with whom you live as if you are civil partners]" |
 | land_and_property | "4. Details of any beneficial interest that I or my partner has in land within Greater London that entitles me or my partner to occupy (alone or jointly with another) that land, or to receive income from it." |
@@ -191,7 +192,7 @@ In the cases where the response to each question in the register was a list, ite
 
 **Interest types**
 
-| Category slug | Source mappings |
+| interest_type | Source mappings |
 | ------------- | --------------- |
 | employment_and_earnings | "Employment, trade, profession or vocation" |
 | gift | "Gifts and hospitality" |
