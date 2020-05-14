@@ -2,23 +2,48 @@ import copy
 import lxml
 
 def parse_twfy_xml(context, data):
-    # Category 1: Employment and earnings 
-    # Category 2(a): support received by a local party organisation or indirectly via a central party organisation
-    # Category 2(b): any other support received by a Member.
-    # Category 3: Gifts, benefits and hospitality from UK sources
-    # Category 4: Visits outside the UK
-    # Category 5: Gifts and benefits from sources outside the UK
-    # Category 6: Land and property 
-    # Category 7: Shareholdings 
-    # Category 8: Miscellaneous 
-    # Category 9: Family members employed 
-    # Category 10: Family members engaged in lobbying 
-    
+
+    # TODO: these map to current register but may not be accurate for older ones
+    interest_type_mapping = {
+        "1": "employment_and_earnings",
+        "2": "donations_sponsorship",
+        "3": "gift",
+        "4": "overseas_visit",
+        "5": "gift",
+        "6": "land_and_property",
+        "7": "securities_and_shareholding",
+        "8": "other",
+        "9": "employed_family",
+        "10": "lobbying"
+    }
+
+    def get_notes(category_element):
+        if category_element.get("type") == "2":
+            if "(a)" in category_element.get("name"):
+                return "Support linked to an MP but received by a local party organisation or indirectly via a central party organisation"
+            if "(b)" in category_element.get("name"):
+                return "Any other support not included in Category 2(a)"
+        if category_element.get("type") == "3":
+            return "Gifts, benefits and hospitality from UK sources"
+        if category_element.get("type") == "5":
+            return "Gifts and benefits from sources outside the UK"
+        if category_element.get("type") == "7":
+            if "(i)" in category_element.get("name"):
+                return "Shareholdings: over 15% of issued share capital"
+            if "(ii)" in category_element.get("name"):
+                return "Other shareholdings, valued at more than £70,000"
+
+        return None
+
     with context.http.rehash(data) as result:
-        
+
         if result.xml is not None:
-            entries = result.xml.findall(".//regmem")
-            
+            try:
+                entries = result.xml.findall(".//regmem")
+            except AssertionError as e:
+                entries = []
+                context.log.warning("Could not parse {}: {}".format(result.url, e))
+
             for entry in entries:
                 base_declaration = {
                     "source": result.url,
@@ -31,7 +56,10 @@ def parse_twfy_xml(context, data):
                 sections = entry.findall(".//category")
                 for section in sections:
                     category_declaration = copy.deepcopy(base_declaration)
-                    category_declaration["interest_type"] = section.get("name")
+                    category_declaration["interest_type"] = interest_type_mapping[str(section.get("type"))]
+                    notes = get_notes(section)
+                    if notes is not None:
+                        category_declaration["notes"] = notes
 
                     items = section.findall(".//item")
                     for item in items:
@@ -60,7 +88,7 @@ def parse_group(context, data):
                 if row_header == "officers":
                     officers = parse_group_officers(table)
 
-                # TODO: does this table ever contain data or is it actually just 
+                # TODO: does this table ever contain data or is it actually just
                 #       a subheading?
                 # if row_header == "registrable benefits received by the group":
                 #     benefits = parse_group_benefits(table)
@@ -132,7 +160,7 @@ ukparl_groups
 Parses the Benefits In Kind table
 """
 def parse_group_benefits_in_kind(table):
-    
+
     headings = {
         "0": "Source",
         "1": "Description",
@@ -152,7 +180,7 @@ def parse_group_benefits_in_kind(table):
     benefits_in_kind = []
     for row in table.findall(".//tr"):
         cols = row.findall(".//td")
-        
+
         if len(cols) == 5:
             benefit = {}
             for i, col in enumerate(cols):

@@ -59,113 +59,144 @@ The table schema are set per-scraper (see below), and in addition to the columns
 
 ## Scrapers
 
-### UK Parliament
+The scrapers mostly parse their sources into a common set of table columns, but there are some variations between them.
+
+| Column name | Description |
+| ----------- | ----------- |
+| source | the url the data was scraped from |
+| declared_to | the body to which the interest was declared |
+| declared_date | the date on which the interest was registered |
+| member_name | the name of the person declaring the interest |
+| member_url | a url for the person declaring the interest |
+| member_party | role or job description of person declaring the interest | 
+| member_party | the party affiliation of the person declaring the interest | 
+| interest_type | the category of interest being declared - see below |
+| description | the contents of the declaration, which may contain other semi-structured data that can be parsed (or not) |
+| interest_from | provider of the benefit, eg. donor of a gift, or company as employer |
+| interest_date | date the benefit was received or took place, eg. date of donation (not date of declaration of interest) |
+| interest_value | value of the benefit |
+
+The following table summarises which scrapers populate which columns. See notes on individual scrapers below for more information about the actual values.
+
+| Scraper | source | declared_to | declared_date | member_name | member_url | member_role | member_party | interest_type | description | interest_from | interest_date | interest_value |
+| ------- | ------ | ---------------- | --------------- | ----------- | ---------- | ----------- | ------------ | ------------- | ----------- | ------------- | ------------- | -------------- |
+| `ukparl_twfy` | X | X | X | X | X | | | X | X | | | |
+| `ukparl_ministers` | n/a (downloads PDFs) |
+| `ukparl_groups` | X | X | X | X | X | | X | X | X | X | X | X |
+| `gla_gifts` | X | X | | X | X | X | | X | X | X | X | |
+| `gla_register` | X | X | X | X | X | | | X | X | | | |
+| `bristol_register` | X | X | X | X | X | | | X | X | | (X) | |
+
+The value of `interest_type` is one of a set of slugs derived from various source data. The sources vary slightly in how they describe different types of interest, so the mapping of each category slug to text at the source is listed per-scraper below.
+
+### UK Parliament TWFY
 
 `ukparl_twfy` takes the XML data already scraped from https://publications.parliament.uk by TheyWorkForYou and parses it into our database.
 
-`ukparl_twfy` table columns:
+`ukparl_twfy` table columns notes:
 
-* `source`: xml file the data came from
-* `member_name`: name of person
+* `source`: xml file the data came from, *not* the original source on the parliament website
 * `member_url`: URI from publicwhip - not their official profile
-* `body_received_by`: "House of Commons"
-* `disclosure_date`: date of the publication of the register, may not be the actual date of disclosure (in which case, it's in the description)
-* `interest_type`: name of the category of interest being declared, as a string. One of:
-  * "Employment and earnings"
-  * "(a) Support linked to an MP but received by a local party organisation or indirectly via a central party organisation"
-  * "(b) Any other support not included in Category 2(a)"
-  * "(i) Shareholdings: over 15% of issued share capital"
-  * "(ii) Other shareholdings, valued at more than £70,000"
-  * "Family members employed and paid from parliamentary expenses"
-  * "Family members engaged in lobbying the public sector on behalf of a third party or client"
-  * "Gifts and benefits from sources outside the UK"
-  * "Gifts, benefits and hospitality from UK sources"
-  * "Land and property portfolio: (i) value over £100,000 and/or (ii) giving rental income of over £10,000 a year"
-  * "Miscellaneous"
-  * "Visits outside the UK"
+* `declared_to`: "House of Commons"
+* `declared_date`: date of the publication of the register, may not be the actual date of disclosure (in which case, it's in the description)
 * `description`: contents of the interest declaration, aka the interest being declared. Sometimes semi-structured (by a human) and may be parsed further in some cases; sometimes has line spacings.
 
 What this is missing:
 
 * Link back to the actual source on the UK parliament website
-* Member roles
+* Member roles / party / constituency data which may appear in the source
+* Some years have 'part 2' of the register filled with 'category 12' which is family members employed. Not sure if this is coming through.
+* Older registers use different category numbering! Need to look at this and improve interest_type mapping.
+
+**Interest types**
+
+| Category slug | Source mappings |
+| ------------- | --------------- |
+| employment_and_earnings | "1. Employment and earnings" |
+| employed_family | "9. Family members employed and paid from parliamentary expenses" |
+| gift | "3. Gifts, benefits and hospitality from UK sources", "5. Gifts and benefits from sources outside the UK" |
+| overseas_visit | "4. Visits outside the UK" |
+| land_and_property | "6. Land and property portfolio: (i) value over £100,000 and/or (ii) giving rental income of over £10,000 a year" |
+| securities_and_shareholding | "7.(i) Shareholdings: over 15% of issued share capital", "7.(ii) Other shareholdings, valued at more than £70,000" |
+| donations_sponsorship | "2.(a) Support linked to an MP but received by a local party organisation or indirectly via a central party organisation", "2.(b) Any other support not included in Category 2(a)" |
+| lobbying | "10. Family members engaged in lobbying the public sector on behalf of a third party or client" |
+| other | "8. Miscellaneous" |
+
+### UK Parliament ministers
 
 `ukparl_ministers` fetches PDFs from [gov.uk list of ministers interests](https://www.gov.uk/government/publications/list-of-ministers-interests). They are stored in `MEMORIOUS_BASE_PATH/scraped_files/ukparl_ministers`.
+
+### UK Parliament All-Party Parliamentary Groups
 
 `ukparl_groups` gets the [All-Party Parliamentary Groups](https://publications.parliament.uk/pa/cm/cmallparty/200408/contents.htm) and for each benefit registered for a group, creates a declaration for each member of the group in the 'other' category, with the note "via role as {} in the {} All-Party Parliamentary Group" added to the `description`.
 
 Note: Politician membership of groups that have no benefits declared do not get recorded.
 
-`ukparl_groups` table columns:
+`ukparl_groups` table column notes:
 
-* `source`: url of the page the data came from
-* `disclosure_date`: date the benefit was registered
-* `body_received_by`: "UK Parliament"
+* `declared_to`: "UK Parliament"
 * `member_name`: name of the group member
-* `member_party`: political party of the group member
 * `interest_type`: "other"
-* `interest_date`: date the benefit was received
-* `interest_from`: the source of the benefit (which may be a person or organisation)
-* `interest_value`: value of the benefit 
-* `description`: the text content of one interest declared.
 
-### Greater London Assembly
+**Interest types**
 
-Two scrapers, one to fetch the gifts/hospitality, and one for the declarations themselves.
+They are all "other".
 
-`gla_gifts` table columns:
+### Greater London Assembly: Gifts
 
-* `source`: url of the page the data came from
-* `member_name`: name of person
-* `member_url`: url of the person's profile on the website
-* `member_role`: person's role
-* `gift_date`: in ATOM format
-* `gift_reason`: free text information about the gift
-* `gift_donor`: free text, person or organisation that donated or provided gift
+`gla_gifts` table column notes:
 
-`gla_register` table columns:
+* `declared_to`: "Greater London Assembly"
+* `interest_type`: "gift"
+* `interest_date`: date gift was given, in ATOM format
+* `interest_from`: free text, person or organisation that donated or provided gift
 
-* `source`: url of the page the data came from
-* `member_name`: name of person making declaration
-* `member_url`: url of the person's profile on the website
-* `disclosure_date`: date on the declaration
+Missing:
 
-The declaration fields contain the text for each response to the following questions. In the cases where the response was a bulleted list, items in the list have been joined with a `|`.
+* `declared_date` or anything that could be used to infer it (like last updated) is not provided at the source
 
-* `employment_description`: "1. Details of any employment, office, trade, profession or vocation carried on for profit or gain by me or my partner. [Partner means spouse, civil partner, a person with whom you live as husband or wife, or a person with whom you live as if you are civil partners]"
-* `sponsorship_description`: "2. Details of any payment or provision of any other financial benefit (other than from the GLA) made or provided within the last 12 months in respect of any expenses incurred by me in carrying out my duties as a member, or towards my election expenses. (This includes any payment or financial benefit from a trade union)."
-* `contract_description`: Covers all of the following:
-    * "3(a). Details of any contract which is made between (i) myself (or my partner) and (ii) the GLA under which (a) goods or services are to be provided or works are to be executed and (b) which has not been fully discharged."
-    * "3(b). Details of any contract which is made between (i) a firm in which I (or my partner) is a partner and (ii) the GLA under which (a) goods or services are to be provided or works are to be executed and (b) which has not been fully discharged."
-    * "3(c). Details of any contract which is made between (i) a body corporate of which I (or my partner) is a director and (ii) the GLA under which (a) goods or services are to be provided or works are to be executed and (b) which has not been fully discharged. [Director includes a member of the committee of management of an industrial and provident society]"
-    * "3(d). Details of any contract which is made between (i) a firm or a body corporate that in the securities of which I (or my partner) has a beneficial interest and (ii) the GLA under which (a) goods or services are to be provided or works are to be executed and (b) which has not been fully discharged. [Securities means shares, debentures, debenture stock, loan stock, bonds, units of a collective investment scheme within the meaning of the Financial Services and Markets Act 2000 and other securities of any description, other than money deposited with a building society."
-    * "3(e). Details of any contract which is made between (i) a firm in which I am (or my partner is)  an employee and the relevant body/bodies at Section A of this form OR (ii) a member of my close family and the relevant body/bodies specified at Section A of this form under which (a) goods or services are to be provided or works are to be executed and (b) which has not been fully discharged."
-* `land_description`: "4. Details of any beneficial interest that I or my partner has in land within Greater London that entitles me or my partner to occupy (alone or jointly with another) that land, or to receive income from it."
-* `contract_land_licence_description`: "5. Details of any licence that entitles me or my partner (alone or jointly with others) to occupy land in Greater London for a month or longer."
-* `contract_tenancy_description`: "6. Details of any tenancy where, to my knowledge, (a) the GLA is the landlord; and (b) the tenant is (i) a firm in which I (or my partner) is a partner, (ii) a body corporate of which I (or my partner) is a director, or (iii) (i) a firm or a body corporate that in the securities of which I (or my partner) has a beneficial interest."
-* `securities`: "7. Details of beneficial interest that I or my partner has in the securities of a body where (a) that body (to my knowledge) has a place of business or land in Greater London; and (b) either (i) the total nominal value of the securities that I or my partner has exceeds £25,000 or one hundredth of the total issued share capital of that body; or (ii) if the share capital of that body is of more than one class, the total nominal value of the shares of any one class in which I or my partner has a beneficial interest exceeds one hundredth of the total issued share capital of that class."
-* `position_nonprofit_description`: "8. Names and positions in non-profit making organisations with which a relevant body specified at Section A has dealings where I am or my partner is a trustee or participate(s) in management of that body and where not disclosed elsewhere in this form."
-* `position_other_description`: "9.  Any other office or position which I hold (including companies, trade associations and industry forums)  and where not already disclosed elsewhere in this form"
-* `position_directorship_description`: "10. Any other directorships of companies which I hold, whether paid or not, and where not already disclosed elsewhere on this form"
-* `other_description`: "11. Any other Interest which I hold which might reasonably be likely to be perceived as affecting my conduct or influencing my actions in relation to my role on the relevant body/bodies specified at Section A of the form."
+**Interest types**
 
-### Bristol
+They are all "gift".
 
-`bristol_register` table columns:
+### Greater London Assembly: Register
 
-* `source`: URL of the page the data came from
-* `member_name`: Name of the councillor making the declaration
-* `member_url`: URL of the profile page of the councillor making the declaration
+`gla_register` table column notes:
 
-The declaration fields as described on the webpage. In the cases where the response was a list, items in the list have been joined with a `|`.
+* `declared_to`: "Greater London Assembly"
+* `notes`: contains disambiguation information for contracts and positions, to take into account the subsections of these interest types in the source
 
-* `employment_description`: "Employment, trade, profession or vocation"
-* `sponsorship_description`: "Sponsorship"
-* `contract_description`: "Contracts"
-* `land_description`: "Land in the area of the authority"
-* `contract_land_licence_description`: "Licences to occupy land"
-* `contract_tenancy_description`: "Corporate tenancies"
-* `securities_description`: "Securities"
-* `position_membership_description`: "Membership of organisations"
-* `gift_description` and `gift_date`: From "Gifts and hospitality" under headings "Name of Donor/Nature of gift or hospitality" and "Date of registration" respectively
+Each person's declaration contains a response to one of a set of questions. Multi-line or bulleted responses are kept in their original form, because being split over lines doesn't guarantee that each line is actually a different interest; sometimes it's just poor formatting. If the response was "None" or "N/A" this is retained.
 
+**Interest types**
+
+| Category slug | Source mappings |
+| ------------- | --------------- |
+| employment_and_earnings | "1. Details of any employment, office, trade, profession or vocation carried on for profit or gain by me or my partner. [Partner means spouse, civil partner, a person with whom you live as husband or wife, or a person with whom you live as if you are civil partners]" |
+| land_and_property | "4. Details of any beneficial interest that I or my partner has in land within Greater London that entitles me or my partner to occupy (alone or jointly with another) that land, or to receive income from it." |
+| securities_and_shareholding | "7. Details of beneficial interest that I or my partner has in the securities of a body where (a) that body (to my knowledge) has a place of business or land in Greater London; and (b) either (i) the total nominal value of the securities that I or my partner has exceeds £25,000 or one hundredth of the total issued share capital of that body; or (ii) if the share capital of that body is of more than one class, the total nominal value of the shares of any one class in which I or my partner has a beneficial interest exceeds one hundredth of the total issued share capital of that class." |
+| contracts | "3(a). Details of any contract which is made between (i) myself (or my partner) and (ii) the GLA under which (a) goods or services are to be provided or works are to be executed and (b) which has not been fully discharged.", "3(b). Details of any contract which is made between (i) a firm in which I (or my partner) is a partner and (ii) the GLA under which (a) goods or services are to be provided or works are to be executed and (b) which has not been fully discharged.", "3(c). Details of any contract which is made between (i) a body corporate of which I (or my partner) is a director and (ii) the GLA under which (a) goods or services are to be provided or works are to be executed and (b) which has not been fully discharged. [Director includes a member of the committee of management of an industrial and provident society]", "3(d). Details of any contract which is made between (i) a firm or a body corporate that in the securities of which I (or my partner) has a beneficial interest and (ii) the GLA under which (a) goods or services are to be provided or works are to be executed and (b) which has not been fully discharged. [Securities means shares, debentures, debenture stock, loan stock, bonds, units of a collective investment scheme within the meaning of the Financial Services and Markets Act 2000 and other securities of any description, other than money deposited with a building society.", "3(e). Details of any contract which is made between (i) a firm in which I am (or my partner is)  an employee and the relevant body/bodies at Section A of this form OR (ii) a member of my close family and the relevant body/bodies specified at Section A of this form under which (a) goods or services are to be provided or works are to be executed and (b) which has not been fully discharged.", "5. Details of any licence that entitles me or my partner (alone or jointly with others) to occupy land in Greater London for a month or longer.", "6. Details of any tenancy where, to my knowledge, (a) the GLA is the landlord; and (b) the tenant is (i) a firm in which I (or my partner) is a partner, (ii) a body corporate of which I (or my partner) is a director, or (iii) (i) a firm or a body corporate that in the securities of which I (or my partner) has a beneficial interest." |
+| donations_sponsorship | "2. Details of any payment or provision of any other financial benefit (other than from the GLA) made or provided within the last 12 months in respect of any expenses incurred by me in carrying out my duties as a member, or towards my election expenses. (This includes any payment or financial benefit from a trade union)." |
+| positions | "8. Names and positions in non-profit making organisations with which a relevant body specified at Section A has dealings where I am or my partner is a trustee or participate(s) in management of that body and where not disclosed elsewhere in this form.", "9.  Any other office or position which I hold (including companies, trade associations and industry forums)  and where not already disclosed elsewhere in this form", "10. Any other directorships of companies which I hold, whether paid or not, and where not already disclosed elsewhere on this form" |
+| other | "11. Any other Interest which I hold which might reasonably be likely to be perceived as affecting my conduct or influencing my actions in relation to my role on the relevant body/bodies specified at Section A of the form." |
+
+### Bristol Register
+
+`bristol_register` table columns notes:
+
+* `interest_date` is present only the case of gifts.
+* `notes` contains information to disambiguate contracts and positions.
+
+In the cases where the response to each question in the register was a list, items in the list have been split into individual rows.
+
+**Interest types**
+
+| Category slug | Source mappings |
+| ------------- | --------------- |
+| employment_and_earnings | "Employment, trade, profession or vocation" |
+| gift | "Gifts and hospitality" |
+| land_and_property | "Land in the area of the authority" |
+| securities_and_shareholding | "Securities" |
+| contracts | "Contracts", "Licences to occupy land", "Corporate tenancies" |
+| donations_sponsorship | "Sponsorship" |
+| positions | "Membership of organisations" |
