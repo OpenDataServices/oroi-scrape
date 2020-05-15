@@ -1,4 +1,5 @@
 import copy
+import lxml
 
 """
 bristol_register
@@ -93,3 +94,42 @@ def parse_register(context, data):
                                 output["description"] = answer.text_content().replace("\r","").replace("\n","").strip()
                                 context.emit(rule="store", data=output)
 
+
+"""
+bristol_meetings
+Parse the listing of meetings
+"""
+def parse_meetings(context, data):
+    url_base = "https://democracy.bristol.gov.uk/"
+    with context.http.rehash(data) as result:
+        if result.html is not None:
+            content = result.html.find(".//div[@id='modgov']/div[@class='mgContent']")
+            declaration_lists = content.findall(".//ul")
+            for declaration_list in declaration_lists:
+                meeting_section_ele = declaration_list.getprevious()
+                meeting_ele = meeting_section_ele.getprevious()
+
+                meeting_link = "{}{}".format(url_base, meeting_ele.find(".//a").get("href"))
+                meeting_info = meeting_ele.find(".//a").text_content().split(" - ")
+                meeting_date = meeting_info[0]
+                meeting_group = meeting_info[1]
+
+                declaration_eles = declaration_list.findall(".//li")
+                for item in declaration_eles:
+                    person_ele = item.find(".//a")
+                    member_name = person_ele.text
+                    member_url = "{}{}".format(url_base, person_ele.get("href"))
+                    description = item.text_content()
+                    description = description.replace("{} - ".format(member_name), "")
+
+                    output = {
+                        "source": meeting_link,
+                        "declared_date": meeting_date.strip(),
+                        "declared_to": "Bristol City Council ({})".format(meeting_group),
+                        "member_name": member_name.strip(),
+                        "member_url": member_url,
+                        "interest_type": "positions",
+                        "description": description.strip()
+                    }
+
+                    context.emit(data=output)

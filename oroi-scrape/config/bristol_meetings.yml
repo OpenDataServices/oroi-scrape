@@ -1,0 +1,26 @@
+name: bristol_meetings
+description: 'Bristol Declarations of Interest from meetings'
+
+pipeline:
+
+  init:
+    method: seed
+    params:
+      url: "https://democracy.bristol.gov.uk/mgListDeclarationsOfInterest.aspx?XXR=0&DR=01/01/2000-14/05/2035&ACT=Find"
+    handle:
+      pass: fetch
+
+  fetch:
+    method: fetch
+    handle:
+      pass: parse
+
+  parse:
+    method: scrapers.bristol:parse_meetings
+    handle:
+      pass: store
+
+  store:
+    method: db
+    params:
+      table: bristol_meetings

@@ -186,6 +186,7 @@ Each person's declaration contains a response to one of a set of questions. Mult
 
 `bristol_register` table columns notes:
 
+* `declared_to` is "Bristol City Council"
 * `interest_date` is present only the case of gifts.
 * `notes` contains information to disambiguate contracts and positions.
 
@@ -202,3 +203,16 @@ In the cases where the response to each question in the register was a list, ite
 | contracts | "Contracts", "Licences to occupy land", "Corporate tenancies" |
 | donations_sponsorship | "Sponsorship" |
 | positions | "Membership of organisations" |
+
+### Bristol Declarations of Interest
+
+It runs a search over the minutes to get everything between 2000 and 2035. There are actually only minutes from 2016 and 2017 at the time of writing.
+
+`bristol_meetings` table columns notes:
+
+* `source` is a link to the meeting minutes
+* `declared_to` is "Bristol City Council" followed by the name of the group meeting in parantheses
+
+**Interest types**
+
+They are all "positions". This is not scrapable, but from an artisanal interpretation (aka eyeball) of the source data, they more or less all seem to be.. This may need manual improvement at some point.
