@@ -98,7 +98,7 @@ def parse_group(context, data):
 
             declaration_base = {
                 "source": result.url,
-                "body_received_by": "UK Parliament",
+                "declared_to": "UK Parliament",
                 "interest_type": "other"
             }
 
