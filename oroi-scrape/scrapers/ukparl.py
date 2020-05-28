@@ -1,37 +1,66 @@
 import copy
 import lxml
+from datetime import datetime
 
 def parse_twfy_xml(context, data):
 
-    # TODO: these map to current register but may not be accurate for older ones
-    interest_type_mapping = {
-        "1": "employment_and_earnings",
-        "2": "donations_sponsorship",
-        "3": "gift",
-        "4": "overseas_visit",
-        "5": "gift",
-        "6": "land_and_property",
-        "7": "securities_and_shareholding",
-        "8": "other",
-        "9": "employed_family",
-        "10": "lobbying"
-    }
+    def get_interest_type(number, old=False):
 
-    def get_notes(category_element):
-        if category_element.get("type") == "2":
-            if "(a)" in category_element.get("name"):
-                return "Support linked to an MP but received by a local party organisation or indirectly via a central party organisation"
-            if "(b)" in category_element.get("name"):
-                return "Any other support not included in Category 2(a)"
-        if category_element.get("type") == "3":
-            return "Gifts, benefits and hospitality from UK sources"
-        if category_element.get("type") == "5":
-            return "Gifts and benefits from sources outside the UK"
-        if category_element.get("type") == "7":
-            if "(i)" in category_element.get("name"):
-                return "Shareholdings: over 15% of issued share capital"
-            if "(ii)" in category_element.get("name"):
-                return "Other shareholdings, valued at more than £70,000"
+        # After and including 2015-06-08
+        interest_type_mapping = {
+            "1": "employment_and_earnings",
+            "2": "donations_sponsorship",
+            "3": "gift",
+            "4": "overseas_visit",
+            "5": "gift",
+            "6": "land_and_property",
+            "7": "securities_and_shareholding",
+            "8": "other",
+            "9": "employed_family",
+            "10": "lobbying"
+        }
+
+        # Up to and including 2015-03-30
+        interest_type_mapping_old = {
+            "1": "employment_and_earnings",
+            "2": "employment_and_earnings",
+            "3": "employment_and_earnings",
+            "4": "donations_sponsorship",
+            "5": "gift",
+            "6": "overseas_visit",
+            "7": "donations_sponsorship",
+            "8": "land_and_property",
+            "9": "securities_and_shareholdings",
+            "10": "other",
+            "11": "other"
+        }
+
+        if old:
+            return interest_type_mapping_old.get(number, "other")
+        else:
+            return interest_type_mapping.get(number, "other")
+
+    def get_notes(category_element, old=False):
+        if old:
+            if category_element.get("type") == "1" or category_element.get("type") == "7" or category_element.get("type") == "10":
+                return category_element.get("name")
+            if category_element.get("type") == "5":
+                return "Gifts, benefits and hospitality from UK sources"
+        else:
+            if category_element.get("type") == "2":
+                if "(a)" in category_element.get("name"):
+                    return "Support linked to an MP but received by a local party organisation or indirectly via a central party organisation"
+                if "(b)" in category_element.get("name"):
+                    return "Any other support not included in Category 2(a)"
+            if category_element.get("type") == "3":
+                return "Gifts, benefits and hospitality from UK sources"
+            if category_element.get("type") == "5":
+                return "Gifts and benefits from sources outside the UK"
+            if category_element.get("type") == "7":
+                if "(i)" in category_element.get("name"):
+                    return "Shareholdings: over 15% of issued share capital"
+                if "(ii)" in category_element.get("name"):
+                    return "Other shareholdings, valued at more than £70,000"
 
         return None
 
@@ -44,11 +73,24 @@ def parse_twfy_xml(context, data):
                 entries = []
                 context.log.warning("Could not parse {}: {}".format(result.url, e))
 
+
             for entry in entries:
+
+                date = entry.get("date")
+
+                # The category number to description mapping changes on 2015-06-08
+                dateobj = datetime.strptime(date, "%Y-%m-%d")
+                new_categories_date = datetime(2015, 6, 8)
+                print(dateobj)
+                if dateobj >= new_categories_date:
+                    old = False
+                else:
+                    old = True
+
                 base_declaration = {
                     "source": result.url,
                     "member_name": entry.get("membername"),
-                    "disclosure_date": entry.get("date"),
+                    "disclosure_date": date,
                     "member_url": entry.get("personid"),
                     "body_received_by": "House of Commons"
                 }
@@ -56,8 +98,8 @@ def parse_twfy_xml(context, data):
                 sections = entry.findall(".//category")
                 for section in sections:
                     category_declaration = copy.deepcopy(base_declaration)
-                    category_declaration["interest_type"] = interest_type_mapping[str(section.get("type"))]
-                    notes = get_notes(section)
+                    category_declaration["interest_type"] = get_interest_type(str(section.get("type")), old)
+                    notes = get_notes(section, old)
                     if notes is not None:
                         category_declaration["notes"] = notes
 
