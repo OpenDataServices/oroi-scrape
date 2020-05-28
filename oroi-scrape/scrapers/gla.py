@@ -7,6 +7,8 @@ gla_gifts
 Gets the page no. of the last page so all pages
 can be generated in sequence.
 """
+
+
 def last_page_no(context, data):
     init_url = context.get("url")
     response = context.http.get(init_url)
@@ -25,6 +27,8 @@ def last_page_no(context, data):
 gla_gifts
 Parses the table of gifts declarations on one page
 """
+
+
 def parse_gifts(context, data):
     parsed_row = {}
     with context.http.rehash(data) as result:
@@ -54,6 +58,8 @@ def parse_gifts(context, data):
 gla_register - helper
 Some fields need disambiguation notes.
 """
+
+
 def get_extra_data():
     return {
         "contract_description": "Contract is with member/partner/family",
@@ -71,6 +77,8 @@ def get_extra_data():
 gla_register - helper
 Assembles the actual value of a field depending on the surrounding html structure.
 """
+
+
 def make_value(field, content_element):
 
     # declarations are alternating <p> with the question and <ul> with the answer
@@ -104,11 +112,15 @@ def make_value(field, content_element):
 gla_register - init
 Parses the sitemap to find all the people
 """
+
+
 def get_members(context, data):
     base_url = context.get("base")
     sitemap_url = context.get("url")
     sitemap = context.http.get(sitemap_url)
-    people = sitemap.html.find(".//div[@id='block-gla-key-person-profile-people-sitemap']")
+    people = sitemap.html.find(
+        ".//div[@id='block-gla-key-person-profile-people-sitemap']"
+    )
     links = people.findall(".//div/ul/li/div/ul/li/a")
     for link in links:
         if link.text.strip().lower() == "register of interests":
@@ -121,6 +133,8 @@ def get_members(context, data):
 gla_register - parse
 Parses a declaration of interest
 """
+
+
 def parse_declaration(context, data):
     declaration_mapping = {
         "1.": "employment_description",
@@ -137,7 +151,7 @@ def parse_declaration(context, data):
         "8.": "position_nonprofit_description",
         "9.": "position_other_description",
         "10.": "position_directorships_description",
-        "11.": "other_description"
+        "11.": "other_description",
     }
 
     # Some data has evidently come from an entirely different form, with slightly different
@@ -152,7 +166,7 @@ def parse_declaration(context, data):
         "1(a)(viii) – ": "gifts",
         "1(a)(ix) – ": "land_description",
         "1(a)(x) – ": "contract_tenancy_description",
-        "1(a)(xi) – ": "contract_land_licence_description"
+        "1(a)(xi) – ": "contract_land_licence_description",
     }
 
     interest_type_mapping = {
@@ -170,7 +184,7 @@ def parse_declaration(context, data):
         "position_nonprofit_description": "positions",
         "position_other_description": "positions",
         "position_directorships_description": "positions",
-        "other_description": "other"
+        "other_description": "other",
     }
 
     parsed_row = {}
@@ -206,14 +220,23 @@ def parse_declaration(context, data):
                     last_block_contents = last_block.findall(".//*")
                     for ele in last_block_contents:
 
-                        if ele.text is not None and ("date" in ele.text.lower() or "declaration:" in ele.text.lower()):
+                        if ele.text is not None and (
+                            "date" in ele.text.lower()
+                            or "declaration:" in ele.text.lower()
+                        ):
                             date = ele.text
 
-                        if ele.text is None and ("date" in ele.text_content().lower() or "declaration:" in ele.text_content().lower()):
+                        if ele.text is None and (
+                            "date" in ele.text_content().lower()
+                            or "declaration:" in ele.text_content().lower()
+                        ):
                             lines = ele.text_content().split("\n")
 
                             for line in lines:
-                                if "date" in line.lower() or "declaration:" in line.lower():
+                                if (
+                                    "date" in line.lower()
+                                    or "declaration:" in line.lower()
+                                ):
                                     date = line
 
                 if date is None:
@@ -228,7 +251,12 @@ def parse_declaration(context, data):
                 date = ps[-1].text_content()
 
             try:
-                date = date.replace("Date:", "").replace("Declaration date:", "").replace("Original declaration date:", "").strip()
+                date = (
+                    date.replace("Date:", "")
+                    .replace("Declaration date:", "")
+                    .replace("Original declaration date:", "")
+                    .strip()
+                )
             except Exception as e:
                 date = "not found"
 
@@ -258,7 +286,9 @@ def parse_declaration(context, data):
                                 if next_element is not None:
                                     value = make_value(field, next_element)
                                     if declaration.get(field):
-                                        declaration[field] = "{}\n{}".format(declaration[field], value)
+                                        declaration[field] = "{}\n{}".format(
+                                            declaration[field], value
+                                        )
                                     else:
                                         declaration[field] = value
 
@@ -277,15 +307,17 @@ def parse_declaration(context, data):
 
                             value = "\n".join(ps)
                             if declaration.get(field):
-                                declaration[field] = "{}\n{}".format(declaration[field], value)
+                                declaration[field] = "{}\n{}".format(
+                                    declaration[field], value
+                                )
                             else:
                                 declaration[field] = value
 
             except Exception as e:
-                print('-----------------------------------')
+                print("-----------------------------------")
                 print(person_url)
-                print('e {}'.format(e))
-                print('-----------------------------------')
+                print("e {}".format(e))
+                print("-----------------------------------")
 
             # Parse the declaration into rows for storage
             notes_data = get_extra_data()
@@ -297,7 +329,6 @@ def parse_declaration(context, data):
                     output["notes"] = notes_data[field]
 
                 context.emit(rule="store", data=output)
-
 
 
 def part_of_answer(mapping, element):

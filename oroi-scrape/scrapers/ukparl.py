@@ -2,8 +2,8 @@ import copy
 import lxml
 from datetime import datetime
 
-def parse_twfy_xml(context, data):
 
+def parse_twfy_xml(context, data):
     def get_interest_type(number, old=False):
 
         # After and including 2015-06-08
@@ -17,7 +17,7 @@ def parse_twfy_xml(context, data):
             "7": "securities_and_shareholding",
             "8": "other",
             "9": "employed_family",
-            "10": "lobbying"
+            "10": "lobbying",
         }
 
         # Up to and including 2015-03-30
@@ -32,7 +32,7 @@ def parse_twfy_xml(context, data):
             "8": "land_and_property",
             "9": "securities_and_shareholdings",
             "10": "other",
-            "11": "other"
+            "11": "other",
         }
 
         if old:
@@ -42,7 +42,11 @@ def parse_twfy_xml(context, data):
 
     def get_notes(category_element, old=False):
         if old:
-            if category_element.get("type") == "1" or category_element.get("type") == "7" or category_element.get("type") == "10":
+            if (
+                category_element.get("type") == "1"
+                or category_element.get("type") == "7"
+                or category_element.get("type") == "10"
+            ):
                 return category_element.get("name")
             if category_element.get("type") == "5":
                 return "Gifts, benefits and hospitality from UK sources"
@@ -73,7 +77,6 @@ def parse_twfy_xml(context, data):
                 entries = []
                 context.log.warning("Could not parse {}: {}".format(result.url, e))
 
-
             for entry in entries:
 
                 date = entry.get("date")
@@ -92,13 +95,15 @@ def parse_twfy_xml(context, data):
                     "member_name": entry.get("membername"),
                     "disclosure_date": date,
                     "member_url": entry.get("personid"),
-                    "body_received_by": "House of Commons"
+                    "body_received_by": "House of Commons",
                 }
 
                 sections = entry.findall(".//category")
                 for section in sections:
                     category_declaration = copy.deepcopy(base_declaration)
-                    category_declaration["interest_type"] = get_interest_type(str(section.get("type")), old)
+                    category_declaration["interest_type"] = get_interest_type(
+                        str(section.get("type")), old
+                    )
                     notes = get_notes(section, old)
                     if notes is not None:
                         category_declaration["notes"] = notes
@@ -110,10 +115,13 @@ def parse_twfy_xml(context, data):
 
                         context.emit(data=declaration)
 
+
 """
 ukparl_groups
 Parses the contents of the group pages
 """
+
+
 def parse_group(context, data):
     declaration = {}
 
@@ -121,7 +129,9 @@ def parse_group(context, data):
         if result.html is not None:
             content = result.html.findall(".//div[@id='mainTextBlock']//table")
 
-            group_name = result.html.find(".//div[@id='mainTextBlock']/h1/span").text_content()
+            group_name = result.html.find(
+                ".//div[@id='mainTextBlock']/h1/span"
+            ).text_content()
 
             benefits_in_kind = None
             for table in content:
@@ -141,7 +151,7 @@ def parse_group(context, data):
             declaration_base = {
                 "source": result.url,
                 "declared_to": "UK Parliament",
-                "interest_type": "other"
+                "interest_type": "other",
             }
 
             if benefits_in_kind is not None and len(benefits_in_kind) > 0:
@@ -154,11 +164,19 @@ def parse_group(context, data):
                         declaration = copy.deepcopy(declaration_benefit)
                         declaration["member_name"] = officer["name"]
                         declaration["member_party"] = officer["party"]
-                        declaration["member_role"] = "{} of {} All-Party Parliamentary Group".format(officer["role"], group_name)
+                        declaration[
+                            "member_role"
+                        ] = "{} of {} All-Party Parliamentary Group".format(
+                            officer["role"], group_name
+                        )
 
-                        membership_string = "via role as {} in the {} All-Party Parliamentary Group".format(officer["role"], group_name)
+                        membership_string = "via role as {} in the {} All-Party Parliamentary Group".format(
+                            officer["role"], group_name
+                        )
 
-                        declaration["description"] = "{} - {}".format(declaration_benefit["description"], membership_string)
+                        declaration["description"] = "{} - {}".format(
+                            declaration_benefit["description"], membership_string
+                        )
 
                         if len(declaration) > 0:
                             context.emit(data=declaration)
@@ -168,6 +186,8 @@ def parse_group(context, data):
 ukparl_groups
 Parses the Officers table
 """
+
+
 def parse_group_officers(table):
     officers = []
     for row in table.findall(".//tr"):
@@ -188,6 +208,7 @@ def parse_group_officers(table):
 
     return officers
 
+
 """
 ukparl_groups
 Parses the Registrable benefits table
@@ -195,13 +216,18 @@ TODO: find an example of one that is actually filled in, so we know
       what the headers are.. otherwise can't parse this (this might
       not really be a data table though)
 """
+
+
 def parse_group_benefits(table):
     return []
+
 
 """
 ukparl_groups
 Parses the Benefits In Kind table
 """
+
+
 def parse_group_benefits_in_kind(table):
 
     headings = {
@@ -209,7 +235,7 @@ def parse_group_benefits_in_kind(table):
         "1": "Description",
         "2": "Value£sInbandsof£1,500",
         "3": "Received",
-        "4": "Registered"
+        "4": "Registered",
     }
 
     fields = {
@@ -217,7 +243,7 @@ def parse_group_benefits_in_kind(table):
         "1": "description",
         "2": "interest_value",
         "3": "interest_date",
-        "4": "disclosure_date"
+        "4": "disclosure_date",
     }
 
     benefits_in_kind = []
@@ -227,7 +253,9 @@ def parse_group_benefits_in_kind(table):
         if len(cols) == 5:
             benefit = {}
             for i, col in enumerate(cols):
-                if col.text_content().strip().replace("\n", "").replace(" ", "") != headings.get(str(i)):
+                if col.text_content().strip().replace("\n", "").replace(
+                    " ", ""
+                ) != headings.get(str(i)):
                     benefit[fields[str(i)]] = col.text_content().strip()
 
             if len(benefit) > 0:
