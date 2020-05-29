@@ -87,6 +87,7 @@ The following table summarises which scrapers populate which columns. See notes 
 | `gla_gifts` | X | X | | X | X | X | | X | X | X | X | |
 | `gla_register` | X | X | X | X | X | | | X | X | | | |
 | `bristol_register` | X | X | X | X | X | | | X | X | | (X) | |
+| `southglos_register` | X | X | X | X | X | | | X | X | X | | |
 
 The value of `interest_type` is one of a set of slugs derived from various source data. The sources vary slightly in how they describe different types of interest, so the mapping of each interest_type to text at the source is listed per-scraper below.
 
@@ -216,3 +217,24 @@ It runs a search over the minutes to get everything between 2000 and 2035. There
 **Interest types**
 
 They are all "positions". This is not scrapable, but from an artisanal interpretation (aka eyeball) of the source data, they more or less all seem to be.. This may need manual improvement at some point.
+
+### South Gloucestershire Register of Interest
+
+`southglos_register` table colunms notes:
+
+* `description` sometimes contains a value where the spouse/partner/civil partner is the beneficiary - this is added in the `notes` field
+* `declared_to` is South Gloucestershire City Council
+
+**Interest types**
+
+| interest_type | Source mappings |
+| ------------- | --------------- |
+| employment_and_earnings | "1. (Pecuniary Interest - Employment) You must provide details of ANY employment, office, trade, profession or vocation carried on for profit or gain." |
+| donations_sponsorship | "2. (Pecuniary Interest - Sponsorship) You must provide details of any payment or provision of any other financial benefit (other than from the relevant authority) made or provided within the relevant period in respect of any expenses incurred by you as a Member of a relevant authority in carrying out duties as a member, or towards your election expenses. This includes any payment or financial benefit from a trade union within the meaning of the Trade Union and Labour Relations (Consolidation) Act 1992)." |
+| contracts | "3. (Pecuniary Interest - Contracts) You must disclose details of any contract which is made between the relevant person (a relevant person is defined in the Act as a Member, or a body in which the relevant person has a beneficial interest) and the relevant authority (a) under which goods or services are to be provided or works are to be executed; and b) which has not been fully discharge" (sic) |
+| land_and_property | "4. (Pecuniary Interest - Land) You must disclose the address of any beneficial interest in land which is within the area of the relevant authority." |
+| contracts | "5. (Pecuniary Interest - Corporate Tenancies) You must disclose the address of any tenancy where (to your knowledge) a) the landlord is the relevant authority; and b) the tenant is a body in which the relevant person has a beneficial interest." |
+| contracts | "6. (Pecuniary Interest - Licenses) You must give the address or describe the location of any land in which you have a licence (alone or jointly with others) to occupy for a month or more in the area of the relevant authority." |
+| securities_and_shareholding | "7. (Pecuniary Interest - Securities) You should detail any beneficial interest in securities of a body which has to your knowledge a place of business or land in the area of your Council and either the total nominal value of the securities exceeds £25,000 or one hundredth of the total issued share capital, or one hundredth of the total issued share capital of any class of shares issued and that of your spouse/civil partner (or person with whom you are living as such) of which you are aware." |
+| positions | "8. (Other Regsiterable Non Pecuniary Interest) You have a Non Disclosable Pecuniary interest in an item of business where a) a decision in relation to that business might reasonably be regarded as affecting the well-being or financial standing of you or a member of your family or a person or body with whom you have a close association to a greater extent than it would affect the majority of the Council Tax payers, ratepayers or inhabitants of the ward or electoral area for which you have been elected or otherwise of the authority’s administrative area, or b) it relates to or is likely to affect any of the interests listed in the Table in the Appendix to the Code, but in respect of a member of your family (other than a “relevant person”) or a person with whom you have a close association" |
+| gift | "9. (Non-Pecuniary Interest - Gifts and Hospitality) Any gift or hospitality received or declined which is in excess of £100 in value" |
