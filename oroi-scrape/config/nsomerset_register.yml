@@ -1,0 +1,54 @@
+name: nsomerset_register
+description: 'North Somerset Council Registered Interests'
+delay: 1
+
+pipeline:
+
+  init:
+    method: seed
+    params:
+      urls:
+        - https://www.n-somerset.gov.uk/my-council/councillors/councillor/membersinterests/registered-interests-district-councillors/
+        - https://www.n-somerset.gov.uk/my-council/councillors/councillor/membersinterests/registered-interests-town-parish-councillors/
+        - https://www.n-somerset.gov.uk/my-council/councillors/councillor/membersinterests/registered-interests-co-opted-members/
+    handle:
+      pass: fetch
+
+  fetch:
+    method: fetch
+    handle:
+      pass: parse
+
+  parse:
+    method: parse
+    params:
+      include_paths:
+       - './/div[@id="content"]'
+    handle:
+      fetch: fetch_files
+
+  fetch_files:
+    method: fetch
+    params:
+      rules:
+        and:
+          - mime_type: application/pdf
+          - pattern: '.*n-somerset.gov.uk.*'
+    handle:
+      pass: pdf
+
+  pdf:
+    method: directory
+    params:
+      path: scraped_files
+
+  # TODO: parse pdfs here..?
+  # pdf:
+  #   method: scrapers.nsomerset:parse_pdf
+  #   handle:
+  #     pass: store
+
+  # store:
+  #   method: db
+  #   params:
+  #     table: nsomerset_register
