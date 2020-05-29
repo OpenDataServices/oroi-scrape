@@ -40,7 +40,10 @@ def parse_register(context, data):
             member_url = None
 
             for bullet in bullets:
-                if "register of interests was published" in bullet.text_content().lower():
+                if (
+                    "register of interests was published"
+                    in bullet.text_content().lower()
+                ):
                     declared_date = bullet.text_content().strip()
 
                 if "information about this councillor" in bullet.text_content().lower():
@@ -74,9 +77,17 @@ def parse_register(context, data):
                             for row in answer:
                                 cols = row.findall(".//td")
                                 if cols:
-                                    if cols[0].text_content().lower().strip() != "none" and cols[0].text_content().strip() != "-" and cols[0].text_content().strip() != "":
-                                        output["description"] = cols[0].text_content().strip()
-                                        output["interest_from"] = cols[1].text_content().strip()
+                                    if (
+                                        cols[0].text_content().lower().strip() != "none"
+                                        and cols[0].text_content().strip() != "-"
+                                        and cols[0].text_content().strip() != ""
+                                    ):
+                                        output["description"] = (
+                                            cols[0].text_content().strip()
+                                        )
+                                        output["interest_from"] = (
+                                            cols[1].text_content().strip()
+                                        )
 
                                         context.emit(rule="store", data=output)
                         else:
@@ -84,10 +95,24 @@ def parse_register(context, data):
                             for row in answer:
                                 cols = row.findall(".//td")
                                 if cols:
-                                    if cols[0].text_content().lower().strip() != "none" and cols[0].text_content().strip() != "-" and cols[0].text_content().strip() != "":
-                                        output["description"] = cols[0].text_content().strip()
+                                    if (
+                                        cols[0].text_content().lower().strip() != "none"
+                                        and cols[0].text_content().strip() != "-"
+                                        and cols[0].text_content().strip() != ""
+                                    ):
+                                        output["description"] = (
+                                            cols[0].text_content().strip()
+                                        )
                                         context.emit(rule="store", data=output)
-                                    if cols[1].text_content().lower().strip() != "none" and cols[1].text_content().strip() != "-" and cols[1].text_content().strip() != "":
-                                        output["description"] = cols[1].text_content().strip()
-                                        output["notes"] = "Spouse, Partner, Civil, Partner's Interests"
+                                    if (
+                                        cols[1].text_content().lower().strip() != "none"
+                                        and cols[1].text_content().strip() != "-"
+                                        and cols[1].text_content().strip() != ""
+                                    ):
+                                        output["description"] = (
+                                            cols[1].text_content().strip()
+                                        )
+                                        output[
+                                            "notes"
+                                        ] = "Spouse, Partner, Civil, Partner's Interests"
                                         context.emit(rule="store", data=output)
