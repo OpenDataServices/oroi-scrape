@@ -49,7 +49,7 @@ def parse_register(context, data):
         "6.": "contracts",
         "7.": "securities_and_shareholdings",
         "8.": "positions",
-        "9.": "gifts",
+        "9.": "gift",
     }
 
     notes_mapping = {
