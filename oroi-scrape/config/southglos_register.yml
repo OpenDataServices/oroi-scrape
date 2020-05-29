@@ -1,0 +1,66 @@
+name: southglos_register
+description: 'Bristol Councillors: Register of interests'
+
+pipeline:
+
+  init:
+    method: seed
+    params:
+      url: https://council.southglos.gov.uk/mgMemberIndex.aspx
+    handle:
+      pass: index
+
+  index:
+    method: fetch
+    handle:
+      pass: list
+
+  list:
+    method: parse
+    params:
+      include_paths:
+       - './/div[@id="content"]//ul'
+    handle:
+      fetch: profile
+
+  profile:
+    method: fetch
+    params:
+      rules:
+        and:
+          - mime_group: web
+          - pattern: '.*/mgUserInfo.*'
+    handle:
+      pass: register
+
+  register:
+    method: parse
+    params:
+      include_paths:
+        - './/div[@id="content"]'
+      meta:
+        member_name: './/div[@id="content"]//h1'
+    handle:
+      fetch: fetch
+
+  fetch:
+    method: fetch
+    params:
+      rules:
+        and:
+          - mime_group: web
+          - or:
+            - pattern: '.*/mgDeclarationSubmission.*'
+            - pattern: '.*/mgRofI.*'
+    handle:
+      pass: parse
+
+  parse:
+    method: scrapers.southglos:parse_register
+    handle:
+      store: store
+
+  store:
+    method: db
+    params:
+      table: southglos_register
