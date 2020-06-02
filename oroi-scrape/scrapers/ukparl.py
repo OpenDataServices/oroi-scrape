@@ -95,7 +95,7 @@ def parse_twfy_xml(context, data):
                     "member_name": entry.get("membername"),
                     "disclosure_date": date,
                     "member_url": entry.get("personid"),
-                    "body_received_by": "House of Commons",
+                    "declared_to": "House of Commons",
                 }
 
                 sections = entry.findall(".//category")
