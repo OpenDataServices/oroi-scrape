@@ -31,6 +31,7 @@ services:
       MEMORIOUS_DEBUG: 'true'
       ARCHIVE_PATH: /data/archive
       REDIS_URL: redis://redis:6379/0
+      MEMORIOUS_MAX_QUEUE_LENGTH: 100000
       MEMORIOUS_DATASTORE_URI: postgresql://datastore:datastore@datastore/datastore
     tmpfs:
       - "/tmp"

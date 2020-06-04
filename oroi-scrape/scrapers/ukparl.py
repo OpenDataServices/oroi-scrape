@@ -71,6 +71,9 @@ def parse_twfy_xml(context, data):
     with context.http.rehash(data) as result:
 
         if result.xml is not None:
+
+            table = context.datastore[context.params.get("table")]
+
             try:
                 entries = result.xml.findall(".//regmem")
             except AssertionError as e:
@@ -84,7 +87,6 @@ def parse_twfy_xml(context, data):
                 # The category number to description mapping changes on 2015-06-08
                 dateobj = datetime.strptime(date, "%Y-%m-%d")
                 new_categories_date = datetime(2015, 6, 8)
-                print(dateobj)
                 if dateobj >= new_categories_date:
                     old = False
                 else:
@@ -93,7 +95,7 @@ def parse_twfy_xml(context, data):
                 base_declaration = {
                     "source": result.url,
                     "member_name": entry.get("membername"),
-                    "disclosure_date": date,
+                    "declared_date": date,
                     "member_url": entry.get("personid"),
                     "declared_to": "House of Commons",
                 }
@@ -113,7 +115,9 @@ def parse_twfy_xml(context, data):
                         declaration = copy.deepcopy(category_declaration)
                         declaration["description"] = "\n".join(item.itertext())
 
-                        context.emit(data=declaration)
+                        # context.emit(data=declaration)
+                        table.insert(declaration)
+                        context.log.info("Store: inserted into {}".format(table))
 
 
 """
@@ -243,7 +247,7 @@ def parse_group_benefits_in_kind(table):
         "1": "description",
         "2": "interest_value",
         "3": "interest_date",
-        "4": "disclosure_date",
+        "4": "declared_date",
     }
 
     benefits_in_kind = []

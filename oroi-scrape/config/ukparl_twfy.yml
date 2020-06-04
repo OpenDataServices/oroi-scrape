@@ -12,6 +12,10 @@ pipeline:
 
   fetch:
     method: fetch
+    params:
+      rules:
+        and:
+          - pattern: '.*/scrapedxml/regmem/*'
     handle:
       pass: parse
 
@@ -19,17 +23,12 @@ pipeline:
     method: parse
     params:
       store:
-        mime_group: web
+        mime_type: application/xml
     handle:
       fetch: fetch
       store: xml
 
   xml:
     method: scrapers.ukparl:parse_twfy_xml
-    handle:
-      pass: store
-
-  store:
-    method: db
     params:
-      table: ukparl_twfy
+      table: ukparl_twfy_man
