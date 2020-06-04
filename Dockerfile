@@ -1,4 +1,4 @@
-FROM alephdata/memorious:latest
+FROM alephdata/memorious:1.6.1
 
 COPY setup.py /oroi-scrape/
 COPY oroi-scrape/scrapers /oroi-scrape/scrapers
