@@ -89,6 +89,7 @@ The following table summarises which scrapers populate which columns. See notes 
 | `bristol_register` | X | X | X | X | X | | | X | X | | (X) | |
 | `bristol_meetings` | X | X | X | X | X | | | X | X | | | |
 | `southglos_register` | X | X | X | X | X | | | X | X | X | | |
+| `nsomerset_register` | n/a (downloads PDFs) |
 
 The value of `interest_type` is one of a set of slugs derived from various source data. The sources vary slightly in how they describe different types of interest, so the mapping of each interest_type to text at the source is listed per-scraper below.
 
