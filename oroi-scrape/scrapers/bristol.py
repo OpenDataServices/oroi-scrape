@@ -83,7 +83,7 @@ def parse_register(context, data):
                         if notes_mapping.get(number) is not None:
                             output["notes"] = notes_mapping.get(number)
 
-                        if field == "gifts":
+                        if field == "gift":
                             # Gifts are in a two-column table with "donor/description" and "date"
                             rows = declaration.findall(".//tr")
                             for row in rows:
