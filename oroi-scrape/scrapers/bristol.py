@@ -1,6 +1,8 @@
 import copy
 import lxml
 
+from memorious.helpers.key import make_id
+
 """
 bristol_register
 Get the register of interest and some data from a council member page
@@ -61,15 +63,18 @@ def parse_register(context, data):
     with context.http.rehash(data) as result:
         output_base = {
             "source": result.url,
+            "source_id": make_id(result.url, data.get("member_name")),
             "member_name": data.get("member_name"),
             "member_url": data.get("member_url"),
             "declared_to": "Bristol City Council",
         }
+
         if result.html is not None:
             holder = result.html.find(".//div[@id='modgov']")
 
             bullets = holder.findall(".//div[@class='mgLinks']//li")
             output_base["declared_date"] = bullets[0].text
+            output_base["registration_id"] = make_id(result.url, data.get("member_name"), output_base.get("declared_date"))
 
             content = holder.find(".//div[@class='mgDeclarations']")
             declarations = content.findall(".//table")
@@ -80,6 +85,7 @@ def parse_register(context, data):
                         output = copy.deepcopy(output_base)
 
                         output["interest_type"] = declaration_mapping.get(number)
+                        output["declaration_id"] = make_id(result.url, data.get("member_name"), output.get("interest_type"))
                         if notes_mapping.get(number) is not None:
                             output["notes"] = notes_mapping.get(number)
 
@@ -92,7 +98,10 @@ def parse_register(context, data):
                                     output["description"] = cells[0].text_content()
                                     output["interest_date"] = cells[1].text_content()
 
+                                    output["interest_hash"] = make_id(output.get("interest_type"), output.get("description"), output.get("interest_date"), output.get("interest_from"), output.get("member_name"))
+
                                     context.emit(rule="store", data=output)
+
                         else:
                             # All other tables are just rows with a single cell
                             answers = declaration.findall(".//td")
@@ -103,6 +112,7 @@ def parse_register(context, data):
                                     .replace("\n", "")
                                     .strip()
                                 )
+                                output["interest_hash"] = make_id(output.get("interest_type"), output.get("description"), output.get("interest_date"), output.get("interest_from"), output.get("member_name"))
                                 context.emit(rule="store", data=output)
 
 
