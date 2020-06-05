@@ -92,6 +92,20 @@ The following table summarises which scrapers populate which columns. See notes 
 
 The value of `interest_type` is one of a set of slugs derived from various source data. The sources vary slightly in how they describe different types of interest, so the mapping of each interest_type to text at the source is listed per-scraper below.
 
+The complete list of interest types (so far) is:
+
+* employment_and_earnings
+* employed_family
+* gift
+* overseas_visit
+* land_and_property
+* securities_and_shareholding
+* contracts
+* donations_sponsorship
+* lobbying
+* positions
+* other
+
 ### UK Parliament TWFY
 
 `ukparl_twfy` takes the XML data already scraped from https://publications.parliament.uk by TheyWorkForYou and parses it into our database.
@@ -109,21 +123,20 @@ What this is missing:
 * Link back to the actual source on the UK parliament website
 * Member roles / party / constituency data which may appear in the source
 * Some years have 'part 2' of the register filled with 'category 12' which is family members employed. Not sure if this is coming through.
-* Older registers use different category numbering! Need to look at this and improve interest_type mapping.
 
 **Interest types**
 
-| interest_type | Source mappings |
-| ------------- | --------------- |
-| employment_and_earnings | "1. Employment and earnings" |
-| employed_family | "9. Family members employed and paid from parliamentary expenses" |
-| gift | "3. Gifts, benefits and hospitality from UK sources", "5. Gifts and benefits from sources outside the UK" |
-| overseas_visit | "4. Visits outside the UK" |
-| land_and_property | "6. Land and property portfolio: (i) value over £100,000 and/or (ii) giving rental income of over £10,000 a year" |
-| securities_and_shareholding | "7.(i) Shareholdings: over 15% of issued share capital", "7.(ii) Other shareholdings, valued at more than £70,000" |
-| donations_sponsorship | "2.(a) Support linked to an MP but received by a local party organisation or indirectly via a central party organisation", "2.(b) Any other support not included in Category 2(a)" |
+| interest_type | Source mappings after and including 2015-06-08 | Source mappings up to and including 2015-03-30 |
+| ------------- | ---------------------------------------------- | ---------------------------------------------- |
+| employment_and_earnings | "1. Employment and earnings" | "1. Remunerated directorships", "2. Remunerated employment, office, profession, etc.", "3. Clients" |
+| employed_family | "9. Family members employed and paid from parliamentary expenses" | n/a |
+| gift | "3. Gifts, benefits and hospitality from UK sources", "5. Gifts and benefits from sources outside the UK" | "5. Gifts, benefits and hospitality (UK)" |
+| overseas_visit | "4. Visits outside the UK" | "6. Overseas visit(s)" |
+| land_and_property | "6. Land and property portfolio: (i) value over £100,000 and/or (ii) giving rental income of over £10,000 a year" | "8. Land and Property" |
+| securities_and_shareholding | "7.(i) Shareholdings: over 15% of issued share capital", "7.(ii) Other shareholdings, valued at more than £70,000" | "9. Registrable shareholdings" |
+| donations_sponsorship | "2.(a) Support linked to an MP but received by a local party organisation or indirectly via a central party organisation", "2.(b) Any other support not included in Category 2(a)" | "4. Sponsorship or financial or material support", "7. Overseas benefits and gifts" |
 | lobbying | "10. Family members engaged in lobbying the public sector on behalf of a third party or client" |
-| other | "8. Miscellaneous" |
+| other | "8. Miscellaneous" | "10./11. Miscellaneous and unremunerated interests", "11. Miscellaneous" |
 
 ### UK Parliament ministers
 
