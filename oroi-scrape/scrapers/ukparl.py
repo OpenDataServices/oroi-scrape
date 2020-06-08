@@ -115,6 +115,9 @@ def parse_twfy_xml(context, data):
                         declaration = copy.deepcopy(category_declaration)
                         declaration["description"] = "\n".join(item.itertext())
 
+                        declaration["__last_seen"] = datetime.utcnow()
+                        declaration["__first_seen"] = declaration["__last_seen"]
+
                         # context.emit(data=declaration)
                         table.insert(declaration)
                         context.log.info("Store: inserted into {}".format(table))

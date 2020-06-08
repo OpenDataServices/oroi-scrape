@@ -31,4 +31,4 @@ pipeline:
   xml:
     method: scrapers.ukparl:parse_twfy_xml
     params:
-      table: ukparl_twfy_man
+      table: ukparl_twfy
