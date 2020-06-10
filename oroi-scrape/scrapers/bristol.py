@@ -3,6 +3,22 @@ import lxml
 
 from memorious.helpers.key import make_id
 
+
+def improve_register_date(datestring):
+    """
+    These dates are so terribly formatted that generic fuzzy date
+    parsing can't handle them. This doesn't parse them completely,
+    (because we don't want to mess with the source data too much)
+    just makes them a little less awful for future processing.
+
+    ie. "This register of interests was published on Wednesday, 22nd June, 2016, 12.16 pm."
+    """
+    datestring = datestring.replace("This register of interests was published on ", "")
+    datestring = datestring.replace(" pm.", "PM")
+    datestring = datestring.replace(" am.", "AM")
+    datestring = datestring.replace(".", ":")
+    return datestring
+
 """
 bristol_register
 Get the register of interest and some data from a council member page
@@ -73,7 +89,8 @@ def parse_register(context, data):
             holder = result.html.find(".//div[@id='modgov']")
 
             bullets = holder.findall(".//div[@class='mgLinks']//li")
-            output_base["declared_date"] = bullets[0].text
+            declared_date = improve_register_date(bullets[0].text)
+            output_base["declared_date"] = declared_date
             output_base["registration_id"] = make_id(result.url, data.get("member_name"), output_base.get("declared_date"))
 
             content = holder.find(".//div[@class='mgDeclarations']")
@@ -113,6 +130,7 @@ def parse_register(context, data):
                                     .strip()
                                 )
                                 output["interest_hash"] = make_id(output.get("interest_type"), output.get("description"), output.get("interest_date"), output.get("interest_from"), output.get("member_name"))
+
                                 context.emit(rule="store", data=output)
 
 
