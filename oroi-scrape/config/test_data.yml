@@ -1,0 +1,14 @@
+name: test
+description: 'Test with SGC personnel interest declarations'
+
+pipeline:
+
+  init:
+    method: scrapers.test_data:get_data
+    handle:
+      pass: store
+
+  store:
+    method: db
+    params:
+      table: test_data
