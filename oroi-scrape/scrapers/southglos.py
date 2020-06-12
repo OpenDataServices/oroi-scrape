@@ -1,5 +1,31 @@
 import copy
 
+from memorious.helpers.key import make_id
+from scrapers.bristol import improve_register_date
+
+def make_hashes(output):
+    output["source_id"] = make_id(
+        output.get("source"), output.get("member_name")
+    )
+    output["registration_id"] = make_id(
+        output.get("source"),
+        output.get("member_name"),
+        output.get("declared_date"),
+    )
+    output["declaration_id"] = make_id(
+        output.get("source"),
+        output.get("member_name"),
+        output.get("interest_type"),
+    )
+    output["interest_hash"] = make_id(
+        output.get("interest_type"),
+        output.get("description"),
+        output.get("interest_date"),
+        output.get("interest_from"),
+        output.get("member_name"),
+    )
+
+    return output
 
 def parse_register(context, data):
     """southglos_register
@@ -17,7 +43,7 @@ def parse_register(context, data):
         "6.": "contracts",
         "7.": "securities_and_shareholding",
         "8.": "other",
-        "9.": "gifts",
+        "9.": "gift",
     }
 
     notes_mapping = {
@@ -44,7 +70,7 @@ def parse_register(context, data):
                     "register of interests was published"
                     in bullet.text_content().lower()
                 ):
-                    declared_date = bullet.text_content().strip()
+                    declared_date = improve_register_date(bullet.text_content().strip())
 
                 if "information about this councillor" in bullet.text_content().lower():
                     member_url = bullet.find(".//a").get("href")
@@ -62,7 +88,7 @@ def parse_register(context, data):
                     if number in question:
                         output = copy.deepcopy(output_base)
 
-                        output["interest_type"] = declaration_mapping.get(number)
+                        output["interest_type"] = declaration_mapping.get(number, "other")
                         if notes_mapping.get(number) is not None:
                             output["notes"] = notes_mapping.get(number)
 
@@ -71,7 +97,10 @@ def parse_register(context, data):
                             lines = entry.findall(".//td")
                             for line in lines:
                                 output["description"] = line.text_content().strip()
+
+                                output = make_hashes(output)
                                 context.emit(rule="store", data=output)
+
                         elif number == "9.":
                             # two columns: gift including date and donor
                             for row in answer:
@@ -89,6 +118,7 @@ def parse_register(context, data):
                                             cols[1].text_content().strip()
                                         )
 
+                                        output = make_hashes(output)
                                         context.emit(rule="store", data=output)
                         else:
                             # two columns: Your interest and Spouse/Civil partner interests
@@ -103,6 +133,7 @@ def parse_register(context, data):
                                         output["description"] = (
                                             cols[0].text_content().strip()
                                         )
+                                        output = make_hashes(output)
                                         context.emit(rule="store", data=output)
                                     if (
                                         cols[1].text_content().lower().strip() != "none"
@@ -115,4 +146,6 @@ def parse_register(context, data):
                                         output[
                                             "notes"
                                         ] = "Spouse, Partner, Civil, Partner's Interests"
+
+                                        output = make_hashes(output)
                                         context.emit(rule="store", data=output)
