@@ -2,8 +2,15 @@ import copy
 import lxml
 from datetime import datetime
 
+from scrapers.helpers import make_hashes
+
 
 def parse_twfy_xml(context, data):
+    """
+    ukparl_twfy
+
+    Parse the XML
+    """
     def get_interest_type(number, old=False):
 
         # After and including 2015-06-08
@@ -119,17 +126,18 @@ def parse_twfy_xml(context, data):
                         declaration["__first_seen"] = declaration["__last_seen"]
 
                         # context.emit(data=declaration)
+                        declaration = make_hashes(declaration)
                         table.insert(declaration)
                         context.log.info("Store: inserted into {}".format(table))
 
 
-"""
-ukparl_groups
-Parses the contents of the group pages
-"""
 
 
 def parse_group(context, data):
+    """
+    ukparl_groups
+    Parses the contents of the group pages
+    """
     declaration = {}
 
     with context.http.rehash(data) as result:
@@ -186,16 +194,17 @@ def parse_group(context, data):
                         )
 
                         if len(declaration) > 0:
+                            declaration = make_hashes(declaration)
                             context.emit(data=declaration)
 
 
-"""
-ukparl_groups
-Parses the Officers table
-"""
 
 
 def parse_group_officers(table):
+    """
+    ukparl_groups
+    Parses the Officers table
+    """
     officers = []
     for row in table.findall(".//tr"):
         cols = row.findall(".//td")
@@ -216,26 +225,26 @@ def parse_group_officers(table):
     return officers
 
 
-"""
-ukparl_groups
-Parses the Registrable benefits table
-TODO: find an example of one that is actually filled in, so we know
-      what the headers are.. otherwise can't parse this (this might
-      not really be a data table though)
-"""
 
 
 def parse_group_benefits(table):
+    """
+    ukparl_groups
+    Parses the Registrable benefits table
+    TODO: find an example of one that is actually filled in, so we know
+          what the headers are.. otherwise can't parse this (this might
+          not really be a data table though)
+    """
     return []
 
 
-"""
-ukparl_groups
-Parses the Benefits In Kind table
-"""
 
 
 def parse_group_benefits_in_kind(table):
+    """
+    ukparl_groups
+    Parses the Benefits In Kind table
+    """
 
     headings = {
         "0": "Source",
