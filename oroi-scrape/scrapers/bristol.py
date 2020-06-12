@@ -14,8 +14,8 @@ def improve_register_date(datestring):
     ie. "This register of interests was published on Wednesday, 22nd June, 2016, 12.16 pm."
     """
     datestring = datestring.replace("This register of interests was published on ", "")
-    datestring = datestring.replace(" pm.", "PM")
-    datestring = datestring.replace(" am.", "AM")
+    datestring = datestring.replace(" pm.", "PM").replace(" pm", "PM")
+    datestring = datestring.replace(" am.", "AM").replace(" am", "AM")
     datestring = datestring.replace(".", ":")
     return datestring
 
@@ -167,7 +167,7 @@ def parse_meetings(context, data):
                     url_base, meeting_ele.find(".//a").get("href")
                 )
                 meeting_info = meeting_ele.find(".//a").text_content().split(" - ")
-                meeting_date = meeting_info[0].strip()
+                meeting_date = improve_register_date(meeting_info[0].strip())
                 meeting_group = meeting_info[1].strip()
 
                 declaration_eles = declaration_list.findall(".//li")
