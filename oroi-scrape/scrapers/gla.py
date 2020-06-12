@@ -1,7 +1,7 @@
 import copy
 import lxml
 from memorious.helpers import search_results_last_url
-from memorious.helpers.key import make_id
+from scrapers.helpers import improve_register_date, make_hashes
 
 
 def last_page_no(context, data):
@@ -49,26 +49,7 @@ def parse_gifts(context, data):
                 parsed_row["declared_to"] = "Greater London Assembly"
                 parsed_row["declared_date"] = "not provided"
 
-                parsed_row["source_id"] = make_id(
-                    result.url, parsed_row.get("member_name")
-                )
-                parsed_row["registration_id"] = make_id(
-                    result.url,
-                    parsed_row.get("member_name"),
-                    parsed_row.get("declared_date"),
-                )
-                parsed_row["declaration_id"] = make_id(
-                    result.url,
-                    parsed_row.get("member_name"),
-                    parsed_row.get("interest_type"),
-                )
-                parsed_row["interest_hash"] = make_id(
-                    parsed_row["interest_type"],
-                    parsed_row["description"],
-                    parsed_row["interest_date"],
-                    parsed_row["interest_from"],
-                    parsed_row["member_name"],
-                )
+                parsed_row = make_hashes(parsed_row)
 
                 context.emit(rule="store", data=parsed_row)
 
@@ -344,20 +325,7 @@ def parse_declaration(context, data):
                 if notes_data.get(field) is not None:
                     output["notes"] = notes_data[field]
 
-                output["source_id"] = make_id(result.url, output.get("member_name"))
-                output["registration_id"] = make_id(
-                    result.url, output.get("member_name"), output.get("declared_date"),
-                )
-                output["declaration_id"] = make_id(
-                    result.url, output.get("member_name"), output.get("interest_type"),
-                )
-                output["interest_hash"] = make_id(
-                    output.get("interest_type"),
-                    output.get("description"),
-                    output.get("interest_date"),
-                    output.get("interest_from"),
-                    output.get("member_name"),
-                )
+                output = make_hashes(output)
 
                 context.emit(rule="store", data=output)
 

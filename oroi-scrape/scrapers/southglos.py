@@ -1,26 +1,6 @@
 import copy
 
-from memorious.helpers.key import make_id
-from scrapers.bristol import improve_register_date
-
-
-def make_hashes(output):
-    output["source_id"] = make_id(output.get("source"), output.get("member_name"))
-    output["registration_id"] = make_id(
-        output.get("source"), output.get("member_name"), output.get("declared_date"),
-    )
-    output["declaration_id"] = make_id(
-        output.get("source"), output.get("member_name"), output.get("interest_type"),
-    )
-    output["interest_hash"] = make_id(
-        output.get("interest_type"),
-        output.get("description"),
-        output.get("interest_date"),
-        output.get("interest_from"),
-        output.get("member_name"),
-    )
-
-    return output
+from scrapers.helpers import improve_register_date, make_hashes
 
 
 def parse_register(context, data):
