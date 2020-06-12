@@ -73,8 +73,6 @@ def parse_gifts(context, data):
                 context.emit(rule="store", data=parsed_row)
 
 
-
-
 def get_extra_data():
     """
     gla_register - helper
@@ -90,8 +88,6 @@ def get_extra_data():
         "position_other_description": "Position is any other office or position held not already disclosed elsewhere",
         "position_directorships_description": "Position is a directorship, whether paid or not",
     }
-
-
 
 
 def make_value(field, content_element):
@@ -127,8 +123,6 @@ def make_value(field, content_element):
         return None
 
 
-
-
 def get_members(context, data):
     """
     gla_register - init
@@ -146,8 +140,6 @@ def get_members(context, data):
             url = "{}{}".format(base_url, link.get("href"))
             # context.emit(rule="debug", data={"url": url})
             context.emit(data={"url": url})
-
-
 
 
 def parse_declaration(context, data):
@@ -352,18 +344,12 @@ def parse_declaration(context, data):
                 if notes_data.get(field) is not None:
                     output["notes"] = notes_data[field]
 
-                output["source_id"] = make_id(
-                    result.url, output.get("member_name")
-                )
+                output["source_id"] = make_id(result.url, output.get("member_name"))
                 output["registration_id"] = make_id(
-                    result.url,
-                    output.get("member_name"),
-                    output.get("declared_date"),
+                    result.url, output.get("member_name"), output.get("declared_date"),
                 )
                 output["declaration_id"] = make_id(
-                    result.url,
-                    output.get("member_name"),
-                    output.get("interest_type"),
+                    result.url, output.get("member_name"), output.get("interest_type"),
                 )
                 output["interest_hash"] = make_id(
                     output.get("interest_type"),

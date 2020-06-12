@@ -137,7 +137,11 @@ def get_data(context, data):
             "member_name": register.get("member_name"),
             "member_url": register.get("member_url"),
             "source_id": make_id(register.get("source"), register.get("member_name")),
-            "registration_id": make_id(register.get("source"), register.get("member_name"), register.get("declared_date"))
+            "registration_id": make_id(
+                register.get("source"),
+                register.get("member_name"),
+                register.get("declared_date"),
+            ),
         }
         for declaration in register.get("declarations"):
             for interest in declaration.get("description"):
@@ -146,7 +150,17 @@ def get_data(context, data):
                 output["notes"] = declaration.get("notes")
                 output["description"] = interest
 
-                output["declaration_id"] = make_id(register.get("source"), declaration.get("interest_type"), register.get("member_name"))
-                output["interest_hash"] = make_id(register.get("member_name"), declaration.get("interest_type"), declaration.get("interest_from"), declaration.get("interest_date"), interest)
+                output["declaration_id"] = make_id(
+                    register.get("source"),
+                    declaration.get("interest_type"),
+                    register.get("member_name"),
+                )
+                output["interest_hash"] = make_id(
+                    register.get("member_name"),
+                    declaration.get("interest_type"),
+                    declaration.get("interest_from"),
+                    declaration.get("interest_date"),
+                    interest,
+                )
 
                 context.emit(data=output)
