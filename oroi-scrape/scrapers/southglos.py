@@ -3,19 +3,14 @@ import copy
 from memorious.helpers.key import make_id
 from scrapers.bristol import improve_register_date
 
+
 def make_hashes(output):
-    output["source_id"] = make_id(
-        output.get("source"), output.get("member_name")
-    )
+    output["source_id"] = make_id(output.get("source"), output.get("member_name"))
     output["registration_id"] = make_id(
-        output.get("source"),
-        output.get("member_name"),
-        output.get("declared_date"),
+        output.get("source"), output.get("member_name"), output.get("declared_date"),
     )
     output["declaration_id"] = make_id(
-        output.get("source"),
-        output.get("member_name"),
-        output.get("interest_type"),
+        output.get("source"), output.get("member_name"), output.get("interest_type"),
     )
     output["interest_hash"] = make_id(
         output.get("interest_type"),
@@ -26,6 +21,7 @@ def make_hashes(output):
     )
 
     return output
+
 
 def parse_register(context, data):
     """southglos_register
@@ -88,7 +84,9 @@ def parse_register(context, data):
                     if number in question:
                         output = copy.deepcopy(output_base)
 
-                        output["interest_type"] = declaration_mapping.get(number, "other")
+                        output["interest_type"] = declaration_mapping.get(
+                            number, "other"
+                        )
                         if notes_mapping.get(number) is not None:
                             output["notes"] = notes_mapping.get(number)
 
