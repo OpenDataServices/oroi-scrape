@@ -182,7 +182,7 @@ def parse_declaration(context, data):
         "1(a)(ii)(cc) – ": "position_other_description",
         "1(a)(vi) – ": "land_description",
         "1(a)(vii) – ": "contract_description",
-        "1(a)(viii) – ": "gifts",
+        "1(a)(viii) – ": "gift",
         "1(a)(ix) – ": "land_description",
         "1(a)(x) – ": "contract_tenancy_description",
         "1(a)(xi) – ": "contract_land_licence_description",
@@ -204,6 +204,7 @@ def parse_declaration(context, data):
         "position_other_description": "positions",
         "position_directorships_description": "positions",
         "other_description": "other",
+        "gift": "gift",
     }
 
     parsed_row = {}
@@ -213,7 +214,8 @@ def parse_declaration(context, data):
             # Get name
             nav = result.html.findall(".//nav[@class='breadcrumb']//a")
             profile = nav[-1]
-            person_name = profile.text.replace("More about", "").strip()
+            name = profile.text.replace("More about", "").strip()
+            person_name, member_role = name_and_role(name)
             person_url = profile.get("href")
 
             holders = result.html.findall(".//div[@class='content']")
@@ -287,6 +289,9 @@ def parse_declaration(context, data):
                 "declared_date": date,
             }
 
+            if member_role is not None:
+                base_declaration["member_role"] = member_role
+
             try:
                 # Get declaration contents
                 content = section_responses.findall(".//div[@class='field__items']//*")
@@ -347,6 +352,27 @@ def parse_declaration(context, data):
                 if notes_data.get(field) is not None:
                     output["notes"] = notes_data[field]
 
+                output["source_id"] = make_id(
+                    result.url, output.get("member_name")
+                )
+                output["registration_id"] = make_id(
+                    result.url,
+                    output.get("member_name"),
+                    output.get("declared_date"),
+                )
+                output["declaration_id"] = make_id(
+                    result.url,
+                    output.get("member_name"),
+                    output.get("interest_type"),
+                )
+                output["interest_hash"] = make_id(
+                    output.get("interest_type"),
+                    output.get("description"),
+                    output.get("interest_date"),
+                    output.get("interest_from"),
+                    output.get("member_name"),
+                )
+
                 context.emit(rule="store", data=output)
 
 
@@ -356,3 +382,10 @@ def part_of_answer(mapping, element):
             return False
 
     return True
+
+
+def name_and_role(name):
+    if "(past staff)" in name.lower():
+        return name.replace(" (past staff)", "").strip(), "Past staff"
+    else:
+        return name, None
