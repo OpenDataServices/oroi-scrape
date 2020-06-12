@@ -1,15 +1,15 @@
 import copy
 import lxml
 from memorious.helpers import search_results_last_url
-
-"""
-gla_gifts
-Gets the page no. of the last page so all pages
-can be generated in sequence.
-"""
+from memorious.helpers.key import make_id
 
 
 def last_page_no(context, data):
+    """
+    gla_gifts
+    Gets the page no. of the last page so all pages
+    can be generated in sequence.
+    """
     init_url = context.get("url")
     response = context.http.get(init_url)
 
@@ -23,13 +23,11 @@ def last_page_no(context, data):
     context.emit(data={"number": int(page_no)})
 
 
-"""
-gla_gifts
-Parses the table of gifts declarations on one page
-"""
-
-
 def parse_gifts(context, data):
+    """
+    gla_gifts
+    Parses the table of gifts declarations on one page
+    """
     parsed_row = {}
     with context.http.rehash(data) as result:
         if result.html is not None:
@@ -51,16 +49,37 @@ def parse_gifts(context, data):
                 parsed_row["declared_to"] = "Greater London Assembly"
                 parsed_row["declared_date"] = "not provided"
 
+                parsed_row["source_id"] = make_id(
+                    result.url, parsed_row.get("member_name")
+                )
+                parsed_row["registration_id"] = make_id(
+                    result.url,
+                    parsed_row.get("member_name"),
+                    parsed_row.get("declared_date"),
+                )
+                parsed_row["declaration_id"] = make_id(
+                    result.url,
+                    parsed_row.get("member_name"),
+                    parsed_row.get("interest_type"),
+                )
+                parsed_row["interest_hash"] = make_id(
+                    parsed_row["interest_type"],
+                    parsed_row["description"],
+                    parsed_row["interest_date"],
+                    parsed_row["interest_from"],
+                    parsed_row["member_name"],
+                )
+
                 context.emit(rule="store", data=parsed_row)
 
 
-"""
-gla_register - helper
-Some fields need disambiguation notes.
-"""
 
 
 def get_extra_data():
+    """
+    gla_register - helper
+    Some fields need disambiguation notes.
+    """
     return {
         "contract_description": "Contract is with member/partner/family",
         "contract_partner_description": "Contract is with a firm of which member/partner/family is a partner",
@@ -73,13 +92,13 @@ def get_extra_data():
     }
 
 
-"""
-gla_register - helper
-Assembles the actual value of a field depending on the surrounding html structure.
-"""
 
 
 def make_value(field, content_element):
+    """
+    gla_register - helper
+    Assembles the actual value of a field depending on the surrounding html structure.
+    """
 
     # declarations are alternating <p> with the question and <ul> with the answer
     parsed_content = []
@@ -108,13 +127,13 @@ def make_value(field, content_element):
         return None
 
 
-"""
-gla_register - init
-Parses the sitemap to find all the people
-"""
 
 
 def get_members(context, data):
+    """
+    gla_register - init
+    Parses the sitemap to find all the people
+    """
     base_url = context.get("base")
     sitemap_url = context.get("url")
     sitemap = context.http.get(sitemap_url)
@@ -129,13 +148,13 @@ def get_members(context, data):
             context.emit(data={"url": url})
 
 
-"""
-gla_register - parse
-Parses a declaration of interest
-"""
 
 
 def parse_declaration(context, data):
+    """
+    gla_register - parse
+    Parses a declaration of interest
+    """
     declaration_mapping = {
         "1.": "employment_description",
         "2.": "sponsorship_description",
